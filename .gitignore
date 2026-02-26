@@ -1,0 +1,50 @@
+# BayanSynthTTS .gitignore
+# ===========================
+# This is the inference-only library.  Training code stays in bayansynth/.
+
+# ── LoRA checkpoints (large binary files — distribute separately) ──────────
+checkpoints/
+*.pt
+*.bin
+*.safetensors
+
+# ── Model weights ──────────────────────────────────────────────────────────
+pretrained_models/
+
+# ── Generated outputs ──────────────────────────────────────────────────────
+output*.wav
+samples/
+*.tmp.wav
+
+# ── Python ─────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# ── Virtual environments ────────────────────────────────────────────────────
+.venv/
+venv/
+env/
+
+# ── IDEs / editors ─────────────────────────────────────────────────────────
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# ── Gradio cache ────────────────────────────────────────────────────────────
+gradio_cached_examples/
+flagged/
+
+# ── Keep these tracked ──────────────────────────────────────────────────────
+!voices/default.wav
+!voices/README.md
+!conf/models.yaml
+!checkpoints/README.md

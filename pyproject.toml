@@ -1,0 +1,62 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.backends.legacy:build"
+
+[project]
+name = "bayansynthtts"
+version = "1.0.0"
+description = "Arabic Text-to-Speech library built on CosyVoice3 with LoRA fine-tuning"
+readme = "README.md"
+license = { text = "Apache-2.0" }
+requires-python = ">=3.10"
+
+keywords = ["arabic", "tts", "text-to-speech", "cosyvoice", "lora", "arabic-nlp"]
+
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Multimedia :: Sound/Audio :: Speech",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+dependencies = [
+    "numpy>=1.24",
+    "torch>=2.0",
+    "torchaudio>=2.0",
+    "soundfile>=0.12",
+    "PyYAML>=6.0",
+    "mishkal",                  # Rule-based Arabic diacritization (always required)
+    "peft>=0.7",                # LoRA injection
+    "huggingface_hub<1.0",      # ⚠ pinned — >=1.0 breaks transformers import
+    "transformers>=4.40",
+    "omegaconf>=2.3",
+    "hyperpyyaml",
+]
+
+[project.optional-dependencies]
+ui = ["gradio>=4.0"]
+neural-tashkeel = ["tashkeel"]      # Neural diacritization (GPU recommended)
+dev = [
+    "ruff",
+    "pytest",
+    "pytest-cov",
+]
+all = ["bayansynthtts[ui,neural-tashkeel,dev]"]
+
+[project.scripts]
+bayansynthtts = "bayansynthtts.inference:_cli_main"
+bayansynthtts-ui = "bayansynthtts.app:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["bayansynthtts*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"

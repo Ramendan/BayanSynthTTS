@@ -1,0 +1,59 @@
+# BayanSynthTTS Model Configuration
+# ====================================
+# Edit this file to swap checkpoints or change defaults — no code changes needed.
+#
+# Path resolution order:
+#   1. Absolute path  (e.g. C:/models/my.pt)
+#   2. Relative to BayanSynthTTS/ directory
+#   3. Relative to the repo root  (one level up from BayanSynthTTS/)
+
+# ── Base model ──────────────────────────────────────────────────────────────
+base_model:
+  # CosyVoice3 pretrained weights.
+  # Download: python BayanSynthTTS/scripts/setup_models.py
+  model_dir: "../pretrained_models/CosyVoice3"
+
+# ── LLM LoRA adapter ────────────────────────────────────────────────────────
+# To swap: change `checkpoint` to your new .pt file (relative to BayanSynthTTS/).
+# Set enabled: false to use the CosyVoice3 base model LLM without fine-tuning.
+llm_lora:
+  enabled: true
+  checkpoint: "checkpoints/llm/epoch_28_whole.pt"
+  r: 8
+  alpha: 16
+  target_modules:
+    - q_proj
+    - k_proj
+    - v_proj
+    - o_proj
+    - gate_proj
+    - up_proj
+    - down_proj
+
+# ── Flow DiT LoRA adapter ────────────────────────────────────────────────────
+# Disabled by default — enable only if you have a quality-verified flow checkpoint.
+flow_lora:
+  enabled: false
+  checkpoint: "checkpoints/flow/epoch_15_step_49000.pt"
+  scale: 0.6            # effective LoRA scale (tune 0.3–1.0)
+  r: 8
+  target_modules:
+    - to_q
+    - to_k
+    - to_v
+
+# ── Inference defaults ───────────────────────────────────────────────────────
+defaults:
+  # Default reference voice for synthesis and voice cloning.
+  # Replace voices/default.wav with your own clean 5–15s Arabic voice clip.
+  voice: "voices/default.wav"
+
+  # Instruct prompt fed to the LLM.  Must match the prompt used during LoRA training.
+  # Only change this if you fine-tuned with a different system prompt.
+  instruct: "You are a helpful assistant."
+
+  # Auto-diacritize input text before synthesis (always on by default — mishkal is fast).
+  auto_tashkeel: true
+
+  # Audio sample rate — must match CosyVoice3. Do NOT change.
+  sample_rate: 24000

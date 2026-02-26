@@ -1,0 +1,72 @@
+name: BayanSynthTTS CI
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install ruff
+      - run: ruff check bayansynthtts/ scripts/
+
+  test-import:
+    name: Import & Config Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install CPU-only torch + deps
+        run: |
+          pip install torch torchaudio --index-url https://download.pytorch.org/whl/cpu
+          pip install soundfile PyYAML mishkal peft transformers huggingface_hub omegaconf hyperpyyaml
+      - name: Test YAML config loads
+        run: |
+          python - <<'EOF'
+          import sys, os
+          sys.path.insert(0, ".")
+
+          # Patch cosyvoice import to avoid loading full model
+          import types
+          cosyvoice_stub = types.ModuleType("cosyvoice")
+          cosyvoice_cli  = types.ModuleType("cosyvoice.cli")
+          cosyvoice_cli_cv = types.ModuleType("cosyvoice.cli.cosyvoice")
+          cosyvoice_utils = types.ModuleType("cosyvoice.utils")
+          cosyvoice_utils_common = types.ModuleType("cosyvoice.utils.common")
+          cosyvoice_cli_cv.AutoModel = object
+          cosyvoice_utils_common.set_all_random_seed = lambda x: None
+          sys.modules.update({
+              "cosyvoice": cosyvoice_stub,
+              "cosyvoice.cli": cosyvoice_cli,
+              "cosyvoice.cli.cosyvoice": cosyvoice_cli_cv,
+              "cosyvoice.utils": cosyvoice_utils,
+              "cosyvoice.utils.common": cosyvoice_utils_common,
+          })
+
+          from bayansynthtts.inference import load_model_config
+          cfg = load_model_config()
+          assert "model_dir" in cfg
+          assert "llm_checkpoint" in cfg
+          assert cfg["auto_tashkeel"] is True
+          print("Config loader OK:", list(cfg.keys()))
+          EOF
+      - name: Test tashkeel
+        run: |
+          python - <<'EOF'
+          from bayansynthtts.tashkeel import auto_diacritize, has_harakat, list_available_backends
+          result = auto_diacritize("مرحبا بكم")
+          print("Backends:", list_available_backends())
+          print("Result:", result)
+          assert result  # non-empty
+          print("Tashkeel OK")
+          EOF
