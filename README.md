@@ -2,7 +2,7 @@
 
 **Arabic Text-to-Speech powered by CosyVoice3 with LoRA fine-tuning.**
 
-> Just text in, speech out.  No training code, no data processing — inference only.
+> Just text in, speech out.  No training code, no data processing only inference only.
 
 ## Features
 
@@ -11,7 +11,7 @@
 | Arabic TTS | Natural-sounding Modern Standard Arabic |
 | Auto-Tashkeel | Automatic diacritization via mishkal (always on) |
 | Voice Cloning | Clone any voice from a 5–15s clip (WAV/MP3/OGG/M4A/FLAC) |
-| LoRA Swapping | Change checkpoints via `conf/models.yaml` — no code edits |
+| LoRA Swapping | Change checkpoints via `conf/models.yaml` no code edits |
 | Streaming | Chunk-by-chunk audio generation |
 | Gradio UI | Simple web interface included |
 | CLI | One-liner inference from terminal |
