@@ -8,13 +8,13 @@
 
 | Feature | Details |
 |---------|---------|
-| 🇸🇦 Arabic TTS | Natural-sounding Modern Standard Arabic |
-| 🔤 Auto-Tashkeel | Automatic diacritization via mishkal (always on) |
-| 🎙 Voice Cloning | Clone any voice from a 5–15s clip (WAV/MP3/OGG/M4A/FLAC) |
-| 🔄 LoRA Swapping | Change checkpoints via `conf/models.yaml` — no code edits |
-| 🌊 Streaming | Chunk-by-chunk audio generation |
-| 🖥 Gradio UI | Simple web interface included |
-| 💻 CLI | One-liner inference from terminal |
+| Arabic TTS | Natural-sounding Modern Standard Arabic |
+| Auto-Tashkeel | Automatic diacritization via mishkal (always on) |
+| Voice Cloning | Clone any voice from a 5–15s clip (WAV/MP3/OGG/M4A/FLAC) |
+| LoRA Swapping | Change checkpoints via `conf/models.yaml` — no code edits |
+| Streaming | Chunk-by-chunk audio generation |
+| Gradio UI | Simple web interface included |
+| CLI | One-liner inference from terminal |
 
 ---
 
@@ -45,14 +45,12 @@ This will:
 
 ### 3. Add LoRA checkpoints
 
-Copy your trained `.pt` files to:
+Copy your trained `.pt` file to:
 ```
 BayanSynthTTS/
 └── checkpoints/
-    ├── llm/
-    │   └── epoch_28_whole.pt       ← LLM LoRA (required for best Arabic quality)
-    └── flow/
-        └── epoch_15_step_49000.pt  ← Flow LoRA (optional, disabled by default)
+    └── llm/
+        └── epoch_28_whole.pt       <- LLM LoRA (required for best Arabic quality)
 ```
 
 ### 4. Run
@@ -151,15 +149,6 @@ tts = BayanSynthTTS(llm_checkpoint="checkpoints/llm/epoch_40.pt")
 bayansynthtts "مَرْحَباً" --llm checkpoints/llm/epoch_40.pt
 ```
 
-### Enable Flow LoRA
-
-```yaml
-flow_lora:
-  enabled: true
-  checkpoint: "checkpoints/flow/my_flow.pt"
-  scale: 0.6   # tune 0.3–1.0
-```
-
 ---
 
 ## Changing the Default Voice
@@ -191,7 +180,6 @@ bayansynthtts "مَرْحَباً بِكُمْ"                       # basic sy
 bayansynthtts "مَرْحَباً" -o hello.wav                  # custom output path
 bayansynthtts "مَرْحَباً" --voice voices/speaker2.wav   # use specific voice
 bayansynthtts "مَرْحَباً" --llm checkpoints/llm/new.pt  # override LLM LoRA
-bayansynthtts "مَرْحَباً" --enable-flow                 # enable flow LoRA
 bayansynthtts "مَرْحَباً" --speed 0.85                  # slower speech
 bayansynthtts "مَرْحَباً" --no-tashkeel                 # skip auto-diacritize
 bayansynthtts "مَرْحَباً" --seed 123                    # reproducible output
@@ -210,8 +198,7 @@ BayanSynthTTS/
 │   ├── tashkeel.py         # Arabic diacritization (mishkal + tashkeel)
 │   └── app.py              # Gradio web UI
 ├── checkpoints/            # LoRA checkpoints (not tracked in git)
-│   ├── llm/                # LLM LoRA .pt files
-│   └── flow/               # Flow LoRA .pt files
+│   └── llm/                # LLM LoRA .pt files
 ├── conf/
 │   └── models.yaml         # ← Edit this to swap models / defaults
 ├── voices/
@@ -237,9 +224,6 @@ BayanSynthTTS/
 |----------|------|---------|-------------|
 | `model_dir` | `str` | from YAML | CosyVoice3 weights directory |
 | `llm_checkpoint` | `str` | from YAML | LLM LoRA `.pt` path |
-| `flow_checkpoint` | `str` | from YAML | Flow LoRA `.pt` path |
-| `flow_lora_scale` | `float` | `0.6` | Flow LoRA scale (0.3–1.0) |
-| `disable_flow_lora` | `bool` | `True` | Skip flow LoRA injection |
 | `ref_audio` | `str` | from YAML | Default reference voice path |
 | `instruct` | `str` | from YAML | Instruct prompt text |
 | `config_path` | `str` | `conf/models.yaml` | Custom config file path |
@@ -301,7 +285,6 @@ git push origin v1.0
 Then on GitHub: **Releases → Draft a new release → tag v1.0**  
 Attach these files as release assets:
 - `checkpoints/llm/epoch_28_whole.pt`
-- `checkpoints/flow/epoch_15_step_49000.pt` (optional)
 
 Or use the GitHub CLI:
 ```bash
@@ -335,7 +318,6 @@ scripts\run_ui.bat
 | `No LLM checkpoint found` | Copy `.pt` to `BayanSynthTTS/checkpoints/llm/` |
 | `mishkal not found` | `pip install mishkal` |
 | No audio generated | Check console for the specific mode that failed; verify `voices/default.wav` exists |
-| Bad audio quality | Disable flow LoRA (`flow_lora.enabled: false`); try different seed |
 | MP3/M4A upload fails | Install ffmpeg: `winget install ffmpeg` |
 | `huggingface_hub>=1.0` error | `pip install "huggingface_hub<1.0"` — do NOT upgrade to ≥1.0 |
 

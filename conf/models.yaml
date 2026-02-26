@@ -30,18 +30,6 @@ llm_lora:
     - up_proj
     - down_proj
 
-# ── Flow DiT LoRA adapter ────────────────────────────────────────────────────
-# Disabled by default — enable only if you have a quality-verified flow checkpoint.
-flow_lora:
-  enabled: false
-  checkpoint: "checkpoints/flow/epoch_15_step_49000.pt"
-  scale: 0.6            # effective LoRA scale (tune 0.3–1.0)
-  r: 8
-  target_modules:
-    - to_q
-    - to_k
-    - to_v
-
 # ── Inference defaults ───────────────────────────────────────────────────────
 defaults:
   # Default reference voice for synthesis and voice cloning.
