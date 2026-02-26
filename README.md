@@ -15,8 +15,16 @@
 | Streaming | Chunk-by-chunk audio generation |
 | Gradio UI | Simple web interface included |
 | CLI | One-liner inference from terminal |
+| Multilingual base model | CosyVoice3 supports many languages; this package ships with an Arabic LoRA by default |
+
 
 ---
+
+> **Multilingual note:** the underlying CosyVoice3 base model is trained for zero-shot
+> synthesis across a wide range of languages. BayanSynthTTS currently defaults to an
+> Arabic-conditioned LoRA checkpoint and delivers the best results in Modern Standard
+> Arabic. You are free to plug in other LoRA files (not provided here) for additional
+> languages, though quality may vary.
 
 ## Quick Start
 
