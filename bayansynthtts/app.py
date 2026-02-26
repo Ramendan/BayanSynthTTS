@@ -44,7 +44,7 @@ def _list_voices() -> list[tuple[str, str]]:
     if os.path.isdir(voices_dir):
         for f in sorted(os.listdir(voices_dir)):
             if f.lower().endswith((".wav", ".mp3", ".flac", ".ogg")):
-                choices.append((f"🎙 {Path(f).stem}", os.path.join(voices_dir, f)))
+                choices.append((Path(f).stem, os.path.join(voices_dir, f)))
     # Fallback to asset prompt if voices folder is empty
     if not choices:
         asset = os.path.join(REPO_ROOT, "asset", "zero_shot_prompt.wav")
@@ -63,7 +63,7 @@ def synthesize(
     seed: int,
 ):
     if not text.strip():
-        return None, "⚠️  Please enter some Arabic text."
+        return None, "Please enter some Arabic text."
 
     # Upload takes priority over dropdown
     ref_audio = None
@@ -75,7 +75,7 @@ def synthesize(
     try:
         tts = _get_tts()
     except Exception as e:
-        return None, f"❌ Model load error: {e}"
+        return None, f"Model load error: {e}"
 
     instruct_text = instruct.strip() if instruct and instruct.strip() else None
 
@@ -89,12 +89,12 @@ def synthesize(
             auto_tashkeel=auto_tashkeel,
         )
     except Exception as e:
-        return None, f"❌ Synthesis error: {e}"
+        return None, f"Synthesis error: {e}"
 
     if audio is None or len(audio) == 0:
-        return None, "❌ No audio generated. Check the console for details."
+        return None, "No audio generated. Check the console for details."
 
-    return (tts.sample_rate, audio.astype("float32")), "✅ Done"
+    return (tts.sample_rate, audio.astype("float32")), "Done"
 
 
 def build_ui() -> gr.Blocks:
@@ -103,7 +103,7 @@ def build_ui() -> gr.Blocks:
 
     with gr.Blocks(title="BayanSynthTTS — Arabic TTS", theme=gr.themes.Soft()) as demo:
         gr.Markdown(
-            "# 🔊 BayanSynthTTS — Arabic Text-to-Speech\n"
+            "#BayanSynthTTS — Arabic Text-to-Speech\n"
             "Powered by **CosyVoice3** with Arabic LoRA fine-tuning. "
             "Type Arabic text (with or without harakat) and press **Generate**."
         )
@@ -120,7 +120,7 @@ def build_ui() -> gr.Blocks:
                     label="Auto-Diacritize (Tashkeel) — recommended for plain Arabic text",
                     value=True,
                 )
-                generate_btn = gr.Button("🎤 Generate Speech", variant="primary", size="lg")
+                generate_btn = gr.Button("Generate Speech", variant="primary", size="lg")
                 status = gr.Textbox(label="Status", interactive=False, max_lines=2)
                 audio_output = gr.Audio(label="Output Audio", type="numpy")
 

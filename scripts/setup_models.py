@@ -36,9 +36,8 @@ BAYAN_DIR   = SCRIPT_DIR.parent                         # BayanSynthTTS/
 REPO_ROOT   = BAYAN_DIR.parent                          # CosyVoice/ (repo root)
 
 DEFAULT_MODEL_DIR = REPO_ROOT / "pretrained_models" / "CosyVoice3"
-DEFAULT_LLM_CKPT  = BAYAN_DIR / "checkpoints" / "llm" / "epoch_28_whole.pt"
-DEFAULT_FLOW_CKPT = BAYAN_DIR / "checkpoints" / "flow" / "epoch_15_step_49000.pt"
-DEFAULT_VOICE     = BAYAN_DIR / "voices" / "default.wav"
+DEFAULT_LLM_CKPT = BAYAN_DIR / "checkpoints" / "llm" / "epoch_28_whole.pt"
+DEFAULT_VOICE    = BAYAN_DIR / "voices" / "default.wav"
 ASSET_PROMPT_WAV  = REPO_ROOT / "asset" / "zero_shot_prompt.wav"
 
 HF_REPO_ID = "FunAudioLLM/CosyVoice3-300M-Instruct"
@@ -50,8 +49,7 @@ GITHUB_RELEASE_URL = "https://github.com/Ramendan/BayanSynthTTS/releases/downloa
 
 # Files to download from the release (filename → destination relative to BAYAN_DIR)
 CHECKPOINT_FILES = {
-    "epoch_28_whole.pt":        "checkpoints/llm/epoch_28_whole.pt",
-    "epoch_15_step_49000.pt":   "checkpoints/flow/epoch_15_step_49000.pt",
+    "epoch_28_whole.pt": "checkpoints/llm/epoch_28_whole.pt",
 }
 
 
@@ -76,10 +74,10 @@ def _download_file(url: str, dest: Path) -> bool:
         print()  # newline after progress
         tmp.rename(dest)
         size_mb = dest.stat().st_size / 1_048_576
-        print(f"[setup] ✓  Downloaded {dest.name}  ({size_mb:.0f} MB)")
+        print(f"[setup] Downloaded {dest.name}  ({size_mb:.0f} MB)")
         return True
     except Exception as e:
-        print(f"\n[setup] ✗  Download failed: {e}")
+        print(f"\n[setup] Download failed: {e}")
         if tmp.exists():
             tmp.unlink()
         return False
@@ -133,35 +131,27 @@ def download_checkpoints(release_url: str, force: bool = False) -> None:
 
 
 def check_checkpoints() -> bool:
-    """Check which checkpoints are present. Returns True if LLM LoRA found."""
-    checks = [
-        (DEFAULT_LLM_CKPT,  "LLM LoRA (required)",  True),
-        (DEFAULT_FLOW_CKPT, "Flow LoRA (optional)",  False),
-    ]
-    llm_ok = False
-    for path, name, required in checks:
-        if path.exists():
-            size_mb = path.stat().st_size / 1_048_576
-            print(f"[setup] ✓  {name}: {path.name}  ({size_mb:.0f} MB)")
-            if required:
-                llm_ok = True
-        else:
-            marker = "✗" if required else "–"
-            print(f"[setup] {marker}  {name}: not found at {path}")
-    return llm_ok
+    """Check whether the LLM LoRA checkpoint is present. Returns True if found."""
+    if DEFAULT_LLM_CKPT.exists():
+        size_mb = DEFAULT_LLM_CKPT.stat().st_size / 1_048_576
+        print(f"[setup] LLM LoRA: {DEFAULT_LLM_CKPT.name}  ({size_mb:.0f} MB)")
+        return True
+    else:
+        print(f"[setup] LLM LoRA: not found at {DEFAULT_LLM_CKPT}")
+        return False
 
 
 def ensure_default_voice() -> None:
     """Copy asset/zero_shot_prompt.wav → voices/default.wav if missing."""
     if DEFAULT_VOICE.exists():
-        print(f"[setup] ✓  Default voice: {DEFAULT_VOICE.name}")
+        print(f"[setup] Default voice: {DEFAULT_VOICE.name}")
         return
     if ASSET_PROMPT_WAV.exists():
         DEFAULT_VOICE.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(ASSET_PROMPT_WAV, DEFAULT_VOICE)
-        print(f"[setup] ✓  Copied default voice → voices/default.wav")
+        print(f"[setup] Copied default voice -> voices/default.wav")
     else:
-        print(f"[setup] ⚠  No default voice. Add a WAV file to: {DEFAULT_VOICE}")
+        print(f"[setup] No default voice. Add a WAV file to: {DEFAULT_VOICE}")
 
 
 def update_models_yaml(model_dir: Path) -> None:
@@ -228,7 +218,7 @@ def main() -> None:
     llm_ok = DEFAULT_LLM_CKPT.exists()
     print("=" * 62)
     if llm_ok:
-        print("  ✅  Setup complete!")
+        print("  Setup complete!")
         print()
         print("  Quick test:")
         print('  python -c "from bayansynthtts import BayanSynthTTS; BayanSynthTTS()"')
@@ -236,7 +226,7 @@ def main() -> None:
         print("  Launch UI:")
         print("  scripts\\run_ui.bat   (or: python bayansynthtts/app.py)")
     else:
-        print("  ⚠  Setup incomplete — LLM LoRA checkpoint missing.")
+        print("  Setup incomplete -- LLM LoRA checkpoint missing.")
         print()
         print("  The model will still run using the CosyVoice3 base (lower quality).")
         print()

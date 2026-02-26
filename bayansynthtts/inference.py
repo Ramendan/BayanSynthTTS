@@ -46,7 +46,6 @@ DEFAULT_MODEL_DIR = os.path.join(REPO_ROOT, "pretrained_models", "CosyVoice3")
 
 # LoRA checkpoints live in BayanSynthTTS/checkpoints/
 DEFAULT_LLM_CKPT = os.path.join(BAYAN_DIR, "checkpoints", "llm", "epoch_28_whole.pt")
-DEFAULT_FLOW_CKPT = os.path.join(BAYAN_DIR, "checkpoints", "flow", "epoch_15_step_49000.pt")
 
 # Default reference voice
 DEFAULT_PROMPT_WAV = os.path.join(BAYAN_DIR, "voices", "default.wav")
@@ -70,10 +69,6 @@ LLM_LORA_TARGETS = [
     "q_proj", "k_proj", "v_proj", "o_proj",
     "gate_proj", "up_proj", "down_proj",
 ]
-
-# ── Flow LoRA config (must match training) ─────────────────────────────────
-FLOW_LORA_R = 8
-FLOW_LORA_TARGETS = ["to_q", "to_k", "to_v"]
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -127,11 +122,6 @@ def load_model_config(config_path: Optional[str] = None) -> dict:
         "llm_r":           _v("llm_lora",   "r",          LLM_LORA_R),
         "llm_alpha":       _v("llm_lora",   "alpha",      LLM_LORA_ALPHA),
         "llm_targets":     _v("llm_lora",   "target_modules", LLM_LORA_TARGETS),
-        "flow_checkpoint": _p("flow_lora",  "checkpoint", DEFAULT_FLOW_CKPT),
-        "flow_enabled":    _v("flow_lora",  "enabled",    False),
-        "flow_scale":      _v("flow_lora",  "scale",      0.6),
-        "flow_r":          _v("flow_lora",  "r",          FLOW_LORA_R),
-        "flow_targets":    _v("flow_lora",  "target_modules", FLOW_LORA_TARGETS),
         "default_voice":   _p("defaults",   "voice",      DEFAULT_PROMPT_WAV),
         "instruct":        _v("defaults",   "instruct",   DEFAULT_INSTRUCT),
         "auto_tashkeel":   _v("defaults",   "auto_tashkeel", True),
@@ -354,38 +344,6 @@ def _inject_llm_lora(cosyvoice, checkpoint_path: str, *, device=None) -> int:
     return n_loaded
 
 
-def _inject_flow_lora(
-    cosyvoice, checkpoint_path: str, scale: float = 1.0, *, device=None
-) -> int:
-    """Inject Flow DiT LoRA adapters and load checkpoint weights."""
-    import torch
-    from peft import LoraConfig, inject_adapter_in_model
-
-    if device is None:
-        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-    sd = torch.load(checkpoint_path, map_location="cpu")
-    has_lora = any("lora_" in k for k in sd.keys())
-
-    if has_lora:
-        flow_alpha = int(scale * FLOW_LORA_R)
-        lora_cfg = LoraConfig(
-            r=FLOW_LORA_R,
-            lora_alpha=flow_alpha,
-            lora_dropout=0.0,
-            target_modules=FLOW_LORA_TARGETS,
-            bias="none",
-        )
-        inject_adapter_in_model(lora_cfg, cosyvoice.model.flow.decoder)
-
-    tensor_sd = {k: v for k, v in sd.items() if isinstance(v, torch.Tensor)}
-    missing, unexpected = cosyvoice.model.flow.load_state_dict(tensor_sd, strict=False)
-    n_loaded = len(tensor_sd) - len(unexpected)
-
-    cosyvoice.model.flow.to(device).eval()
-    return n_loaded
-
-
 # ═══════════════════════════════════════════════════════════════════════════
 #  BayanSynthTTS — Main inference class
 # ═══════════════════════════════════════════════════════════════════════════
@@ -418,9 +376,6 @@ class BayanSynthTTS:
         self,
         model_dir: Optional[str] = None,
         llm_checkpoint: Optional[str] = None,
-        flow_checkpoint: Optional[str] = None,
-        flow_lora_scale: Optional[float] = None,
-        disable_flow_lora: Optional[bool] = None,
         ref_audio: Optional[str] = None,
         instruct: Optional[str] = None,
         config_path: Optional[str] = None,
@@ -434,12 +389,8 @@ class BayanSynthTTS:
         # ── Load config and apply explicit overrides ─────────────────────────
         cfg = load_model_config(config_path)
 
-        _model_dir       = model_dir       or cfg["model_dir"]
-        self._llm_ckpt   = llm_checkpoint  or (cfg["llm_checkpoint"] if cfg["llm_enabled"] else None)
-        _flow_enabled    = (not disable_flow_lora) if disable_flow_lora is not None else cfg["flow_enabled"]
-        self._flow_ckpt  = flow_checkpoint or cfg["flow_checkpoint"]
-        self._flow_scale = flow_lora_scale if flow_lora_scale is not None else cfg["flow_scale"]
-        self._disable_flow_lora = not _flow_enabled
+        _model_dir     = model_dir      or cfg["model_dir"]
+        self._llm_ckpt = llm_checkpoint or (cfg["llm_checkpoint"] if cfg["llm_enabled"] else None)
 
         # Resolve default voice: voices/default.wav → asset fallback
         _default_voice = cfg["default_voice"]
@@ -468,17 +419,6 @@ class BayanSynthTTS:
             print(f"[BayanSynthTTS] LLM LoRA loaded: {n} keys from {os.path.basename(self._llm_ckpt)}")
         else:
             print(f"[BayanSynthTTS] No LLM checkpoint at '{self._llm_ckpt}' — using pretrained base")
-
-        # ── Inject Flow LoRA ─────────────────────────────────────────────────
-        if not self._disable_flow_lora and self._flow_ckpt and os.path.isfile(self._flow_ckpt):
-            n = _inject_flow_lora(
-                self.cosyvoice, self._flow_ckpt, scale=self._flow_scale, device=self._device
-            )
-            print(f"[BayanSynthTTS] Flow LoRA loaded: {n} keys, scale={self._flow_scale}")
-        elif self._disable_flow_lora:
-            print("[BayanSynthTTS] Flow LoRA disabled (set flow_lora.enabled: true in conf/models.yaml to enable)")
-        else:
-            print(f"[BayanSynthTTS] No Flow checkpoint at '{self._flow_ckpt}' — using pretrained base")
 
         self.sample_rate = SAMPLE_RATE
 
@@ -686,10 +626,6 @@ def _cli_main():
                         help="Path to reference voice file (any format)")
     parser.add_argument("--llm", default=None,
                         help="Override LLM LoRA checkpoint path")
-    parser.add_argument("--flow", default=None,
-                        help="Override Flow LoRA checkpoint path")
-    parser.add_argument("--enable-flow", action="store_true",
-                        help="Enable Flow LoRA (disabled by default)")
     parser.add_argument("--speed", type=float, default=1.0,
                         help="Speed multiplier (0.5–2.0)")
     parser.add_argument("--seed", type=int, default=42,
@@ -702,8 +638,6 @@ def _cli_main():
 
     tts = BayanSynthTTS(
         llm_checkpoint=args.llm,
-        flow_checkpoint=args.flow,
-        disable_flow_lora=(not args.enable_flow) if args.enable_flow else None,
         config_path=args.config,
     )
     dur = tts.synthesize_to_file(
