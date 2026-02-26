@@ -15,15 +15,21 @@ import os
 import sys
 from pathlib import Path
 
-# Ensure repo root is on the path (for cosyvoice/ and third_party/)
-REPO_ROOT = str(Path(__file__).resolve().parent.parent.parent)
-if REPO_ROOT not in sys.path:
-    sys.path.insert(0, REPO_ROOT)
-
-BAYAN_DIR = str(Path(__file__).resolve().parent.parent)  # BayanSynthTTS/
-
 import gradio as gr
-import numpy as np
+
+# Ensure cosyvoice is importable.
+# Preferred: `pip install -r requirements.txt` installs cosyvoice as a package.
+# Fallback: sibling-repo layout (BayanSynthTTS inside CosyVoice-Arabic checkout).
+BAYAN_DIR = str(Path(__file__).resolve().parent.parent)  # BayanSynthTTS/
+REPO_ROOT = str(Path(__file__).resolve().parent.parent.parent)
+try:
+    import cosyvoice  # noqa: F401
+except ImportError:
+    if REPO_ROOT not in sys.path:
+        sys.path.insert(0, REPO_ROOT)
+    _matcha = os.path.join(REPO_ROOT, "third_party", "Matcha-TTS")
+    if _matcha not in sys.path:
+        sys.path.insert(0, _matcha)
 
 # ── Lazy model loading ────────────────────────────────────────────────────
 _TTS_INSTANCE = None

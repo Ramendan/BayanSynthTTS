@@ -37,6 +37,7 @@ dependencies = [
     "transformers>=4.40",
     "omegaconf>=2.3",
     "hyperpyyaml",
+    "matcha-tts",      # HiFi-GAN audio decoder used by CosyVoice3
 ]
 
 [project.optional-dependencies]

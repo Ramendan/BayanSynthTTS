@@ -29,3 +29,10 @@ mishkal                    # Rule-based (always required, zero GPU overhead)
 
 # ── Optional: Gradio UI ─────────────────────────────────────────────────────
 gradio>=4.0
+
+# ── CosyVoice3 TTS engine + audio decoder ────────────────────────────────────
+# Installs the cosyvoice package from the CosyVoice-Arabic fork.
+# Required for standalone use outside the CosyVoice-Arabic repo.
+cosyvoice @ git+https://github.com/Ramendan/CosyVoice-Arabic.git
+# Matcha-TTS provides the HiFi-GAN audio decoder used by CosyVoice3.
+matcha-tts

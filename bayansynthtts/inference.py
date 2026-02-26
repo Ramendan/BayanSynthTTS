@@ -18,7 +18,6 @@ from __future__ import annotations
 import os
 import sys
 import threading
-import time
 from pathlib import Path
 from typing import Generator, Optional, Union
 
@@ -33,24 +32,30 @@ if hasattr(sys.stderr, "reconfigure"):
 # ── Paths ──────────────────────────────────────────────────────────────────
 # BayanSynthTTS/ directory (one level up from bayansynthtts/inference.py)
 BAYAN_DIR = str(Path(__file__).resolve().parent.parent)
-# Repo root (one level up from BayanSynthTTS/) — where cosyvoice/ and third_party/ live
+# Parent directory — kept for fallback when running inside a sibling-repo layout
 REPO_ROOT = str(Path(__file__).resolve().parent.parent.parent)
 
-if REPO_ROOT not in sys.path:
-    sys.path.insert(0, REPO_ROOT)
-_matcha = os.path.join(REPO_ROOT, "third_party", "Matcha-TTS")
-if _matcha not in sys.path:
-    sys.path.insert(0, _matcha)
+# Ensure cosyvoice is importable.
+# Preferred: `pip install -r requirements.txt` installs cosyvoice as a package.
+# Fallback: sibling-repo layout where BayanSynthTTS is inside CosyVoice-Arabic.
+try:
+    import cosyvoice  # noqa: F401
+except ImportError:
+    if REPO_ROOT not in sys.path:
+        sys.path.insert(0, REPO_ROOT)
+    _matcha = os.path.join(REPO_ROOT, "third_party", "Matcha-TTS")
+    if _matcha not in sys.path:
+        sys.path.insert(0, _matcha)
 
-DEFAULT_MODEL_DIR = os.path.join(REPO_ROOT, "pretrained_models", "CosyVoice3")
+DEFAULT_MODEL_DIR = os.path.join(BAYAN_DIR, "pretrained_models", "CosyVoice3")
 
 # LoRA checkpoints live in BayanSynthTTS/checkpoints/
 DEFAULT_LLM_CKPT = os.path.join(BAYAN_DIR, "checkpoints", "llm", "epoch_28_whole.pt")
 
 # Default reference voice
 DEFAULT_PROMPT_WAV = os.path.join(BAYAN_DIR, "voices", "default.wav")
-# Fallback to original asset if voices/default.wav not present
-_ASSET_PROMPT_WAV = os.path.join(REPO_ROOT, "asset", "zero_shot_prompt.wav")
+# Fallback asset voice if voices/default.wav not present
+_ASSET_PROMPT_WAV = os.path.join(BAYAN_DIR, "asset", "zero_shot_prompt.wav")
 
 # Instruct prompt — MUST match training data
 DEFAULT_INSTRUCT = "You are a helpful assistant.<|endofprompt|>"
@@ -161,7 +166,8 @@ def save_wav(filepath: str, audio: np.ndarray, sample_rate: int = SAMPLE_RATE) -
         return
     except ImportError:
         pass
-    import torch, torchaudio
+    import torch
+    import torchaudio
     t = torch.from_numpy(arr.T if arr.ndim == 2 else arr.reshape(1, -1)).float()
     torchaudio.save(filepath, t, sample_rate)
 
@@ -175,7 +181,9 @@ def convert_audio_to_wav(src_path: str, target_sr: int = SAMPLE_RATE) -> str:
     Returns the path to the converted temporary WAV (delete when finished).
     Raises RuntimeError if all conversion backends fail.
     """
-    import tempfile, shutil, subprocess
+    import tempfile
+    import shutil
+    import subprocess
     import torch
     import torchaudio
     import torchaudio.functional as F
@@ -451,7 +459,6 @@ class BayanSynthTTS:
         Returns:
             numpy array (samples,) at 24 kHz, or a generator if stream=True.
         """
-        import torch
         from cosyvoice.utils.common import set_all_random_seed
 
         _do_tashkeel = auto_tashkeel if auto_tashkeel is not None else self._default_auto_tashkeel
