@@ -88,7 +88,7 @@ def _download_file(url: str, dest: Path) -> bool:
 def download_base_model(model_dir: Path, force: bool = False) -> None:
     """Download CosyVoice3 weights from Hugging Face Hub."""
     if model_dir.exists() and not force:
-        print(f"[setup] ✓  Base model already exists at: {model_dir}")
+        print(f"[setup] Base model already exists at: {model_dir}")
         return
 
     print(f"[setup] Downloading {HF_REPO_ID} → {model_dir}")
@@ -99,7 +99,7 @@ def download_base_model(model_dir: Path, force: bool = False) -> None:
             local_dir=str(model_dir),
             ignore_patterns=["*.msgpack", "flax_model*", "tf_model*"],
         )
-        print(f"[setup] ✓  Base model downloaded to {model_dir}")
+        print(f"[setup] Base model downloaded to {model_dir}")
     except Exception as e:
         print(f"[setup] ERROR downloading base model: {e}")
         print("       Install huggingface_hub: pip install huggingface_hub")
@@ -115,7 +115,7 @@ def download_checkpoints(release_url: str, force: bool = False) -> None:
         dest = BAYAN_DIR / rel_dest
         if dest.exists() and not force:
             size_mb = dest.stat().st_size / 1_048_576
-            print(f"[setup] ✓  {filename} already present  ({size_mb:.0f} MB)")
+            print(f"[setup] {filename} already present  ({size_mb:.0f} MB)")
             continue
 
         url = f"{release_url}/{filename}"

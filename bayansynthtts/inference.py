@@ -92,7 +92,7 @@ def load_model_config(config_path: Optional[str] = None) -> dict:
     """Load BayanSynthTTS/conf/models.yaml and resolve all paths.
 
     Returns a flat dict with keys: model_dir, llm_checkpoint, llm_enabled,
-    flow_checkpoint, flow_enabled, flow_scale, default_voice, instruct,
+    llm_r, llm_alpha, llm_targets, default_voice, instruct,
     auto_tashkeel, sample_rate.
 
     Falls back to hardcoded defaults if the config file is missing.
@@ -351,7 +351,7 @@ def _inject_llm_lora(cosyvoice, checkpoint_path: str, *, device=None) -> int:
 class BayanSynthTTS:
     """High-level Arabic TTS engine.
 
-    Wraps CosyVoice3 with LoRA-finetuned LLM (and optional Flow) for Arabic synthesis.
+    Wraps CosyVoice3 with a LoRA-finetuned LLM for Arabic synthesis.
 
     All arguments are optional — defaults come from ``BayanSynthTTS/conf/models.yaml``.
     Pass explicit values to override without editing YAML (useful for A/B testing checkpoints).

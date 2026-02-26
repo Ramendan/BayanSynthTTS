@@ -26,6 +26,7 @@
 > Arabic. You are free to plug in other LoRA files (not provided here) for additional
 > languages, though quality may vary.
 
+
 ## Quick Start
 
 ### 1. Prerequisites
@@ -272,8 +273,8 @@ git init
 git add .
 git commit -m "Initial BayanSynthTTS library — inference only"
 
-# Create a new repo on GitHub (e.g. https://github.com/YOUR_USER/BayanSynthTTS)
-git remote add origin https://github.com/YOUR_USER/BayanSynthTTS
+# Create a new repo on GitHub (e.g. https://github.com/Ramendan/BayanSynthTTS)
+git remote add origin https://github.com/Ramendan/BayanSynthTTS
 git branch -M main
 git push -u origin main
 ```
@@ -304,12 +305,12 @@ gh release upload v1.0 checkpoints/llm/epoch_28_whole.pt
 
 In [scripts/setup_models.py](scripts/setup_models.py), update:
 ```python
-GITHUB_RELEASE_URL = "https://github.com/YOUR_USER/BayanSynthTTS/releases/download/v1.0"
+GITHUB_RELEASE_URL = "https://github.com/Ramendan/BayanSynthTTS/releases/download/v1.0"
 ```
 
 Commit and push. Users now get everything with:
 ```bash
-git clone https://github.com/YOUR_USER/BayanSynthTTS
+git clone https://github.com/Ramendan/BayanSynthTTS
 cd BayanSynthTTS
 pip install -r requirements.txt
 python scripts/setup_models.py   # downloads base model + LoRA checkpoints
