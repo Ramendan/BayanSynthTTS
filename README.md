@@ -29,40 +29,30 @@
 
 ## Quick Start
 
-### 1. Prerequisites
-
-This library lives inside the [CosyVoice-Arabic](https://github.com/Ramendan/CosyVoice-Arabic) repo.
-Clone the main repo first, then install dependencies:
+### 1. Clone and install
 
 ```bash
-git clone https://github.com/Ramendan/CosyVoice-Arabic
-cd CosyVoice-Arabic
-python -m venv .venv && .venv\Scripts\activate   # Windows
-pip install -r BayanSynthTTS/requirements.txt
+git clone https://github.com/Ramendan/BayanSynthTTS
+cd BayanSynthTTS
+python -m venv .venv
+.venv\Scripts\activate         # Windows
+pip install -r requirements.txt
 ```
 
-### 2. Download the base model + set up checkpoints
+> `requirements.txt` installs all dependencies including the CosyVoice3 engine and Matcha-TTS decoder.
+
+### 2. Download models
 
 ```bash
-python BayanSynthTTS/scripts/setup_models.py
+python scripts/setup_models.py
 ```
 
-This will:
-- Download CosyVoice3 weights from Hugging Face Hub
-- Check if LoRA checkpoints exist in `BayanSynthTTS/checkpoints/`
-- Copy the default reference voice
+This downloads everything automatically:
+- CosyVoice3 base weights from Hugging Face → `pretrained_models/CosyVoice3/`
+- Arabic LoRA checkpoint from GitHub Releases → `checkpoints/llm/epoch_28_whole.pt`
+- Verifies the checkpoint SHA-256
 
-### 3. Add LoRA checkpoints
-
-Copy your trained `.pt` file to:
-```
-BayanSynthTTS/
-└── checkpoints/
-    └── llm/
-        └── epoch_28_whole.pt       <- LLM LoRA (required for best Arabic quality)
-```
-
-### 4. Run
+### 3. Run
 
 **Web UI:**
 ```bash
@@ -208,6 +198,8 @@ BayanSynthTTS/
 │   └── app.py              # Gradio web UI
 ├── checkpoints/            # LoRA checkpoints (not tracked in git)
 │   └── llm/                # LLM LoRA .pt files
+├── pretrained_models/      # CosyVoice3 base weights (~2 GB, not tracked in git)
+│   └── CosyVoice3/
 ├── conf/
 │   └── models.yaml         # ← Edit this to swap models / defaults
 ├── voices/
@@ -323,7 +315,7 @@ scripts\run_ui.bat
 
 | Problem | Solution |
 |---------|---------|
-| `No module named 'cosyvoice'` | Run from the CosyVoice-Arabic repo root; add it to `sys.path` |
+| `No module named 'cosyvoice'` | Run `pip install -r requirements.txt` — cosyvoice is installed as part of the dependencies |
 | `No LLM checkpoint found` | Copy `.pt` to `BayanSynthTTS/checkpoints/llm/` |
 | `mishkal not found` | `pip install mishkal` |
 | No audio generated | Check console for the specific mode that failed; verify `voices/default.wav` exists |

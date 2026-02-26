@@ -33,12 +33,11 @@ from pathlib import Path
 # ── Paths ──────────────────────────────────────────────────────────────────
 SCRIPT_DIR  = Path(__file__).resolve().parent          # BayanSynthTTS/scripts/
 BAYAN_DIR   = SCRIPT_DIR.parent                         # BayanSynthTTS/
-REPO_ROOT   = BAYAN_DIR.parent                          # CosyVoice/ (repo root)
 
-DEFAULT_MODEL_DIR = REPO_ROOT / "pretrained_models" / "CosyVoice3"
-DEFAULT_LLM_CKPT = BAYAN_DIR / "checkpoints" / "llm" / "epoch_28_whole.pt"
-DEFAULT_VOICE    = BAYAN_DIR / "voices" / "default.wav"
-ASSET_PROMPT_WAV  = REPO_ROOT / "asset" / "zero_shot_prompt.wav"
+DEFAULT_MODEL_DIR = BAYAN_DIR / "pretrained_models" / "CosyVoice3"
+DEFAULT_LLM_CKPT  = BAYAN_DIR / "checkpoints" / "llm" / "epoch_28_whole.pt"
+DEFAULT_VOICE     = BAYAN_DIR / "voices" / "default.wav"
+ASSET_PROMPT_WAV  = BAYAN_DIR / "asset" / "zero_shot_prompt.wav"
 
 HF_REPO_ID = "FunAudioLLM/CosyVoice3-300M-Instruct"
 
@@ -51,7 +50,10 @@ GITHUB_RELEASE_URL = "https://github.com/Ramendan/BayanSynthTTS/releases/downloa
 CHECKPOINT_FILES = {
     "epoch_28_whole.pt": "checkpoints/llm/epoch_28_whole.pt",
 }
-
+# SHA-256 checksums for verification after download
+CHECKPOINT_SHA256 = {
+    "epoch_28_whole.pt": "805441555f4d829517e6bb79ba74ac23b65c40c8382802362b433d7e91ff8ca2",
+}
 
 # ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -75,6 +77,18 @@ def _download_file(url: str, dest: Path) -> bool:
         tmp.rename(dest)
         size_mb = dest.stat().st_size / 1_048_576
         print(f"[setup] Downloaded {dest.name}  ({size_mb:.0f} MB)")
+        # Verify SHA-256 if available
+        expected_sha = CHECKPOINT_SHA256.get(dest.name)
+        if expected_sha:
+            import hashlib
+            sha256 = hashlib.sha256(dest.read_bytes()).hexdigest()
+            if sha256 != expected_sha:
+                dest.unlink()
+                print(f"[setup] SHA-256 mismatch for {dest.name}!")
+                print(f"         Expected: {expected_sha}")
+                print(f"         Got:      {sha256}")
+                return False
+            print(f"[setup] SHA-256 verified: {dest.name}")
         return True
     except Exception as e:
         print(f"\n[setup] Download failed: {e}")
@@ -149,7 +163,7 @@ def ensure_default_voice() -> None:
     if ASSET_PROMPT_WAV.exists():
         DEFAULT_VOICE.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(ASSET_PROMPT_WAV, DEFAULT_VOICE)
-        print(f"[setup] Copied default voice -> voices/default.wav")
+        print("[setup] Copied default voice -> voices/default.wav")
     else:
         print(f"[setup] No default voice. Add a WAV file to: {DEFAULT_VOICE}")
 
@@ -234,7 +248,7 @@ def main() -> None:
         print(f"    Copy epoch_28_whole.pt → {DEFAULT_LLM_CKPT}")
         print()
         print("  Or download from GitHub Releases:")
-        print(f"    python scripts/setup_models.py --release-url YOUR_RELEASE_URL")
+        print("    python scripts/setup_models.py --release-url YOUR_RELEASE_URL")
     print("=" * 62)
 
 
