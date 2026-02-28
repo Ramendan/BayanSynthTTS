@@ -17,19 +17,12 @@ from pathlib import Path
 
 import gradio as gr
 
-# Ensure cosyvoice is importable.
-# Preferred: `pip install -r requirements.txt` installs cosyvoice as a package.
-# Fallback: sibling-repo layout (BayanSynthTTS inside CosyVoice-Arabic checkout).
+# Ensure bundled cosyvoice + matcha packages are importable when running from
+# the repo root without `pip install -e .`
 BAYAN_DIR = str(Path(__file__).resolve().parent.parent)  # BayanSynthTTS/
-REPO_ROOT = str(Path(__file__).resolve().parent.parent.parent)
-try:
-    import cosyvoice  # noqa: F401
-except ImportError:
-    if REPO_ROOT not in sys.path:
-        sys.path.insert(0, REPO_ROOT)
-    _matcha = os.path.join(REPO_ROOT, "third_party", "Matcha-TTS")
-    if _matcha not in sys.path:
-        sys.path.insert(0, _matcha)
+_pkg_root = BAYAN_DIR
+if _pkg_root not in sys.path:
+    sys.path.insert(0, _pkg_root)
 
 # ── Lazy model loading ────────────────────────────────────────────────────
 _TTS_INSTANCE = None
@@ -53,7 +46,7 @@ def _list_voices() -> list[tuple[str, str]]:
                 choices.append((Path(f).stem, os.path.join(voices_dir, f)))
     # Fallback to asset prompt if voices folder is empty
     if not choices:
-        asset = os.path.join(REPO_ROOT, "asset", "zero_shot_prompt.wav")
+        asset = os.path.join(BAYAN_DIR, "asset", "zero_shot_prompt.wav")
         if os.path.isfile(asset):
             choices.append(("Default Voice", asset))
     return choices

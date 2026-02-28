@@ -39,7 +39,7 @@ python -m venv .venv
 pip install -r requirements.txt
 ```
 
-> `requirements.txt` installs all dependencies including the CosyVoice3 engine and Matcha-TTS decoder.
+> `requirements.txt` installs all dependencies. The CosyVoice3 inference engine and Matcha-TTS decoder are **bundled directly in this repo** — no external private repos required.
 
 ### 2. Download models
 
@@ -196,6 +196,8 @@ BayanSynthTTS/
 │   ├── inference.py        # Core TTS engine + LoRA injection
 │   ├── tashkeel.py         # Arabic diacritization (mishkal + tashkeel)
 │   └── app.py              # Gradio web UI
+├── cosyvoice/              # Bundled CosyVoice3 engine (Apache 2.0)
+├── matcha/                 # Bundled Matcha-TTS / HiFi-GAN decoder (Apache 2.0)
 ├── checkpoints/            # LoRA checkpoints (not tracked in git)
 │   └── llm/                # LLM LoRA .pt files
 ├── pretrained_models/      # CosyVoice3 base weights (~2 GB, not tracked in git)
@@ -315,7 +317,7 @@ scripts\run_ui.bat
 
 | Problem | Solution |
 |---------|---------|
-| `No module named 'cosyvoice'` | Run `pip install -r requirements.txt` — cosyvoice is installed as part of the dependencies |
+| `No module named 'cosyvoice'` | `cosyvoice` is bundled in this repo — run `pip install -r requirements.txt` (or `pip install -e .`). If running scripts directly, make sure CWD is `BayanSynthTTS/`. |
 | `No LLM checkpoint found` | Copy `.pt` to `BayanSynthTTS/checkpoints/llm/` |
 | `mishkal not found` | `pip install mishkal` |
 | No audio generated | Check console for the specific mode that failed; verify `voices/default.wav` exists |
