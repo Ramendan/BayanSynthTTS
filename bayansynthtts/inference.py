@@ -32,20 +32,12 @@ if hasattr(sys.stderr, "reconfigure"):
 # ── Paths ──────────────────────────────────────────────────────────────────
 # BayanSynthTTS/ directory (one level up from bayansynthtts/inference.py)
 BAYAN_DIR = str(Path(__file__).resolve().parent.parent)
-# Parent directory — kept for fallback when running inside a sibling-repo layout
-REPO_ROOT = str(Path(__file__).resolve().parent.parent.parent)
 
-# Ensure cosyvoice is importable.
-# Preferred: `pip install -r requirements.txt` installs cosyvoice as a package.
-# Fallback: sibling-repo layout where BayanSynthTTS is inside CosyVoice-Arabic.
-try:
-    import cosyvoice  # noqa: F401
-except ImportError:
-    if REPO_ROOT not in sys.path:
-        sys.path.insert(0, REPO_ROOT)
-    _matcha = os.path.join(REPO_ROOT, "third_party", "Matcha-TTS")
-    if _matcha not in sys.path:
-        sys.path.insert(0, _matcha)
+# Ensure bundled cosyvoice + matcha packages are importable when running from
+# the repo root (e.g. `python bayansynthtts/app.py` without `pip install -e .`)
+_pkg_root = str(Path(__file__).resolve().parent.parent)
+if _pkg_root not in sys.path:
+    sys.path.insert(0, _pkg_root)
 
 DEFAULT_MODEL_DIR = os.path.join(BAYAN_DIR, "pretrained_models", "CosyVoice3")
 
