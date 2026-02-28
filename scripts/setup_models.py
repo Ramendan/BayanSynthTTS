@@ -39,7 +39,7 @@ DEFAULT_LLM_CKPT  = BAYAN_DIR / "checkpoints" / "llm" / "epoch_28_whole.pt"
 DEFAULT_VOICE     = BAYAN_DIR / "voices" / "default.wav"
 ASSET_PROMPT_WAV  = BAYAN_DIR / "asset" / "zero_shot_prompt.wav"
 
-HF_REPO_ID = "FunAudioLLM/CosyVoice3-300M-Instruct"
+HF_REPO_ID = "FunAudioLLM/Fun-CosyVoice3-0.5B-2512"
 
 # GitHub Releases base URL for LoRA checkpoints.
 # Set to your own repo's release URL once you publish.
