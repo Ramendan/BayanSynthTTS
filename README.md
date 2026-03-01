@@ -11,6 +11,8 @@
 | Arabic TTS | Natural-sounding Modern Standard Arabic |
 | Auto-Tashkeel | Automatic diacritization via mishkal (always on) |
 | Voice Cloning | Clone any voice from a 5–15s clip (WAV/MP3/OGG/M4A/FLAC) |
+| Example voices | Two reference voices (`default.wav` and `muffled-talking.wav`) are included; add your own to `voices/` |
+
 | LoRA Swapping | Change checkpoints via `conf/models.yaml` — no code edits |
 | Streaming | Chunk-by-chunk audio generation |
 | Gradio UI | Simple web interface included |
@@ -43,8 +45,8 @@ pip install -e .               # installs bayansynthtts + bundled packages into 
 
 > The CosyVoice3 inference engine and Matcha-TTS decoder are **bundled directly in this repo** — no external private repos required.
 >
-> **First-run note:** when Python loads the model for the first time it downloads a small Chinese/English text normalizer (~30 MB) to your local cache (`~/.cache/modelscope`). This is a one-time download and is only needed internally by the audio engine — your Arabic text goes through a separate pipeline.
-
+> **Example voices:** two reference clips (`default.wav` and `muffled-talking.wav`) live in `voices/`. Drop additional 5‑15 s recordings there and they automatically appear in the CLI/UI dropdown.
+> 
 ### 2. Download models
 
 ```bash
@@ -53,7 +55,7 @@ python scripts/setup_models.py
 
 This downloads everything automatically:
 - CosyVoice3 base weights (~2 GB) from Hugging Face → `pretrained_models/CosyVoice3/`
-- Arabic LoRA checkpoint from GitHub Releases → `checkpoints/llm/epoch_28_whole.pt`
+- Arabic LoRA checkpoint from Hugging Face → `checkpoints/llm/epoch_28_whole.pt`
 - Verifies the checkpoint SHA-256
 
 > On Windows you can also double-click `scripts\setup_models.bat`.
@@ -153,6 +155,33 @@ tts = BayanSynthTTS(llm_checkpoint="checkpoints/llm/epoch_40.pt")
 ```bash
 bayansynthtts "مَرْحَباً" --llm checkpoints/llm/epoch_40.pt
 ```
+
+---
+
+## Adding Your Own Voices
+
+To supply additional speaking references simply drop any 5–15 second Arabic clip
+into the `voices/` directory. Supported formats are WAV, MP3, FLAC, OGG, and
+M4A; non‑WAV files are auto‑converted at runtime.
+
+New files are picked up automatically—no configuration changes needed. Use the
+Python API to see what's available:
+
+```python
+from bayansynthtts import BayanSynthTTS
+
+tts = BayanSynthTTS()
+print(tts.list_voices())  # e.g. ['default.wav', 'muffled-talking.wav', 'my_voice.wav']
+```
+
+You can then specify the voice by filename either in code or via CLI:
+
+```bash
+bayansynthtts "مرحبا" --voice voices/my_voice.wav
+```
+
+If you'd prefer to change the default permanently, overwrite
+`voices/default.wav` or adjust `conf/models.yaml` (see below).
 
 ---
 
@@ -262,110 +291,12 @@ list_available_backends()              # → ['mishkal']  (or ['tashkeel', 'mish
 
 ---
 
-## Hosting Checkpoints on Hugging Face (Faster Downloads)
-
-Checkpoints hosted on **Hugging Face Hub** benefit from global CDN, resume-on-failure, and are often faster to download than GitHub Releases (especially outside the US).
-
-### Upload your LoRA checkpoint to HF
-
-```bash
-pip install huggingface_hub
-huggingface-cli login              # enter your HF token (write access)
-
-# Create a new HF model repo (one time)
-huggingface-cli repo create BayanSynthTTS-checkpoints --type model
-
-# Upload the checkpoint
-huggingface-cli upload Ramendan/BayanSynthTTS-checkpoints \
-    checkpoints/llm/epoch_28_whole.pt epoch_28_whole.pt
-```
-
-### Point setup_models.py at HF instead of GitHub Releases
-
-In [scripts/setup_models.py](scripts/setup_models.py), replace the `download_checkpoints` call with a HF download:
-
-```python
-from huggingface_hub import hf_hub_download
-
-def download_checkpoints_hf(repo_id: str, force: bool = False) -> None:
-    for filename, rel_dest in CHECKPOINT_FILES.items():
-        dest = BAYAN_DIR / rel_dest
-        if dest.exists() and not force:
-            print(f"[setup] {filename} already present")
-            continue
-        dest.parent.mkdir(parents=True, exist_ok=True)
-        hf_hub_download(repo_id=repo_id, filename=filename, local_dir=str(dest.parent))
-        print(f"[setup] Downloaded {filename} from HF")
-```
-
-Then call `download_checkpoints_hf("Ramendan/BayanSynthTTS-checkpoints")` instead.
-
-> This is optional — GitHub Releases works fine for most users. HF is recommended if you find downloads are slow or unreliable.
-
----
-
-## GitHub Repo Setup
-
-### Step 1 — Push the code (no checkpoints in git)
-
-```bash
-cd BayanSynthTTS
-
-git init
-git add .
-git commit -m "Initial BayanSynthTTS library — inference only"
-
-# Create a new repo on GitHub (e.g. https://github.com/Ramendan/BayanSynthTTS)
-git remote add origin https://github.com/Ramendan/BayanSynthTTS
-git branch -M main
-git push -u origin main
-```
-
-> **Why no checkpoints in git?** `.pt` files are 100MB–1GB.  
-> GitHub blocks files >100MB and git history bloats permanently with large binaries.  
-> The `.gitignore` already excludes `checkpoints/` and `*.pt`.
-
-### Step 2 — Publish checkpoints as a GitHub Release asset
-
-```bash
-# Tag the release
-git tag v1.0
-git push origin v1.0
-```
-
-Then on GitHub: **Releases → Draft a new release → tag v1.0**  
-Attach these files as release assets:
-- `checkpoints/llm/epoch_28_whole.pt`
-
-Or use the GitHub CLI:
-```bash
-gh release create v1.0 --title "BayanSynthTTS v1.0"
-gh release upload v1.0 checkpoints/llm/epoch_28_whole.pt
-```
-
-### Step 3 — Update the release URL in setup_models.py
-
-In [scripts/setup_models.py](scripts/setup_models.py), update:
-```python
-GITHUB_RELEASE_URL = "https://github.com/Ramendan/BayanSynthTTS/releases/download/v1.0"
-```
-
-Commit and push. Users now get everything with:
-```bash
-git clone https://github.com/Ramendan/BayanSynthTTS
-cd BayanSynthTTS
-pip install -r requirements.txt
-python scripts/setup_models.py   # downloads base model + LoRA checkpoints
-scripts\run_ui.bat
-```
-
----
-
 ## Troubleshooting
 
 | Problem | Solution |
 |---------|---------|
-| `No module named 'cosyvoice'` | Run `pip install -e .` from inside `BayanSynthTTS/`. The `.bat` scripts need the venv **inside** `BayanSynthTTS/` (i.e. `BayanSynthTTS/.venv/`). |
+| `No module named 'cosyvoice'` | Run `pip install -e .` from inside `BayanSynthTTS/`. The `.bat` scripts need the venv **inside** `BayanSynthTTS/` (i.e. `BayanSynthTTS/.venv/`). If you encounter an error about `setuptools.backends`, install/upgrade setuptools first (`pip install --upgrade setuptools`). |
+| `ModuleNotFoundError: No module named 'whisper'` | The bundled CosyVoice engine uses the `whisper` package; install it with `pip install openai-whisper` or `pip install whisper`. |
 | `No LLM checkpoint found` | Run `python scripts/setup_models.py` or manually copy `.pt` to `checkpoints/llm/` |
 | `mishkal not found` | `pip install mishkal` |
 | No audio generated | Check console for the specific mode that failed; verify `voices/default.wav` exists |
