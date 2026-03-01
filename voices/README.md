@@ -2,6 +2,11 @@
 
 This directory contains reference voice files used for synthesis and voice cloning.
 
+## Included Voices
+
+- `default.wav` – the baseline reference voice included with every clone of the repo
+- `muffled-talking.wav` – a second example voice (demonstrates multiple voices support)
+
 ## Default Voice
 
 `default.wav` is the default reference voice.  

@@ -266,7 +266,8 @@ list_available_backends()              # → ['mishkal']  (or ['tashkeel', 'mish
 
 | Problem | Solution |
 |---------|---------|
-| `No module named 'cosyvoice'` | Run `pip install -e .` from inside `BayanSynthTTS/`. The `.bat` scripts need the venv **inside** `BayanSynthTTS/` (i.e. `BayanSynthTTS/.venv/`). |
+| `No module named 'cosyvoice'` | Run `pip install -e .` from inside `BayanSynthTTS/`. The `.bat` scripts need the venv **inside** `BayanSynthTTS/` (i.e. `BayanSynthTTS/.venv/`). If you encounter an error about `setuptools.backends`, install/upgrade setuptools first (`pip install --upgrade setuptools`). |
+| `ModuleNotFoundError: No module named 'whisper'` | The bundled CosyVoice engine uses the `whisper` package; install it with `pip install openai-whisper` or `pip install whisper`. |
 | `No LLM checkpoint found` | Run `python scripts/setup_models.py` or manually copy `.pt` to `checkpoints/llm/` |
 | `mishkal not found` | `pip install mishkal` |
 | No audio generated | Check console for the specific mode that failed; verify `voices/default.wav` exists |
