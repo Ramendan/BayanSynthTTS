@@ -36,10 +36,14 @@ git clone https://github.com/Ramendan/BayanSynthTTS
 cd BayanSynthTTS
 python -m venv .venv
 .venv\Scripts\activate         # Windows
+# source .venv/bin/activate   # Linux / macOS
 pip install -r requirements.txt
+pip install -e .               # installs bayansynthtts + bundled packages into the venv
 ```
 
-> `requirements.txt` installs all dependencies. The CosyVoice3 inference engine and Matcha-TTS decoder are **bundled directly in this repo** — no external private repos required.
+> The CosyVoice3 inference engine and Matcha-TTS decoder are **bundled directly in this repo** — no external private repos required.
+>
+> **First-run note:** when Python loads the model for the first time it downloads a small Chinese/English text normalizer (~30 MB) to your local cache (`~/.cache/modelscope`). This is a one-time download and is only needed internally by the audio engine — your Arabic text goes through a separate pipeline.
 
 ### 2. Download models
 
@@ -48,16 +52,18 @@ python scripts/setup_models.py
 ```
 
 This downloads everything automatically:
-- CosyVoice3 base weights from Hugging Face → `pretrained_models/CosyVoice3/`
+- CosyVoice3 base weights (~2 GB) from Hugging Face → `pretrained_models/CosyVoice3/`
 - Arabic LoRA checkpoint from GitHub Releases → `checkpoints/llm/epoch_28_whole.pt`
 - Verifies the checkpoint SHA-256
+
+> On Windows you can also double-click `scripts\setup_models.bat`.
 
 ### 3. Run
 
 **Web UI:**
 ```bash
-scripts\run_ui.bat            # Windows
-python bayansynthtts/app.py   # Cross-platform
+scripts\run_ui.bat            # Windows GUI launcher
+python bayansynthtts/app.py   # Cross-platform (run from inside BayanSynthTTS/)
 ```
 
 **Python API:**
@@ -256,6 +262,48 @@ list_available_backends()              # → ['mishkal']  (or ['tashkeel', 'mish
 
 ---
 
+## Hosting Checkpoints on Hugging Face (Faster Downloads)
+
+Checkpoints hosted on **Hugging Face Hub** benefit from global CDN, resume-on-failure, and are often faster to download than GitHub Releases (especially outside the US).
+
+### Upload your LoRA checkpoint to HF
+
+```bash
+pip install huggingface_hub
+huggingface-cli login              # enter your HF token (write access)
+
+# Create a new HF model repo (one time)
+huggingface-cli repo create BayanSynthTTS-checkpoints --type model
+
+# Upload the checkpoint
+huggingface-cli upload Ramendan/BayanSynthTTS-checkpoints \
+    checkpoints/llm/epoch_28_whole.pt epoch_28_whole.pt
+```
+
+### Point setup_models.py at HF instead of GitHub Releases
+
+In [scripts/setup_models.py](scripts/setup_models.py), replace the `download_checkpoints` call with a HF download:
+
+```python
+from huggingface_hub import hf_hub_download
+
+def download_checkpoints_hf(repo_id: str, force: bool = False) -> None:
+    for filename, rel_dest in CHECKPOINT_FILES.items():
+        dest = BAYAN_DIR / rel_dest
+        if dest.exists() and not force:
+            print(f"[setup] {filename} already present")
+            continue
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        hf_hub_download(repo_id=repo_id, filename=filename, local_dir=str(dest.parent))
+        print(f"[setup] Downloaded {filename} from HF")
+```
+
+Then call `download_checkpoints_hf("Ramendan/BayanSynthTTS-checkpoints")` instead.
+
+> This is optional — GitHub Releases works fine for most users. HF is recommended if you find downloads are slow or unreliable.
+
+---
+
 ## GitHub Repo Setup
 
 ### Step 1 — Push the code (no checkpoints in git)
@@ -317,12 +365,15 @@ scripts\run_ui.bat
 
 | Problem | Solution |
 |---------|---------|
-| `No module named 'cosyvoice'` | `cosyvoice` is bundled in this repo — run `pip install -r requirements.txt` (or `pip install -e .`). If running scripts directly, make sure CWD is `BayanSynthTTS/`. |
-| `No LLM checkpoint found` | Copy `.pt` to `BayanSynthTTS/checkpoints/llm/` |
+| `No module named 'cosyvoice'` | Run `pip install -e .` from inside `BayanSynthTTS/`. The `.bat` scripts need the venv **inside** `BayanSynthTTS/` (i.e. `BayanSynthTTS/.venv/`). |
+| `No LLM checkpoint found` | Run `python scripts/setup_models.py` or manually copy `.pt` to `checkpoints/llm/` |
 | `mishkal not found` | `pip install mishkal` |
 | No audio generated | Check console for the specific mode that failed; verify `voices/default.wav` exists |
-| MP3/M4A upload fails | Install ffmpeg: `winget install ffmpeg` |
-| `huggingface_hub>=1.0` error | `pip install "huggingface_hub<1.0"` — do NOT upgrade to ≥1.0 |
+| MP3/M4A upload fails | Install ffmpeg: `winget install ffmpeg` (Windows) or `sudo apt install ffmpeg` (Linux) |
+| `ONNX CUDAExecutionProvider not available` | Expected on CPU-only machines or when `onnxruntime-gpu` is not installed. Inference still works on CPU. |
+| First-run downloads from modelscope.cn | Expected — the `wetext` text normalizer downloads its model (~30 MB) once to `~/.cache/modelscope`. It's cached after the first run. |
+| `scripts\run_ui.bat` says "venv not found" | Make sure you created the venv **inside** `BayanSynthTTS/` with `python -m venv .venv` and ran `pip install -r requirements.txt && pip install -e .` from there. |
+| `huggingface_hub` version conflict | Keep `huggingface_hub<1.0` as pinned. If you see errors, run `pip install "huggingface_hub<1.0"` |
 
 ---
 

@@ -47,6 +47,9 @@ flagged/
 dummy.txt
 inspect_commit.py
 
+# ── User-added voice files (only default.wav is tracked) ───────────────────
+voices/*.wav
+
 # ── Keep these tracked ──────────────────────────────────────────────────────
 !voices/default.wav
 !voices/README.md

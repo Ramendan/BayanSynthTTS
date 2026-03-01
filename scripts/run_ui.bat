@@ -4,16 +4,22 @@
 
 setlocal
 set "BAYAN_DIR=%~dp0.."
-set "REPO_ROOT=%~dp0..\.."
-set "VENV_PY=%REPO_ROOT%\.venv\Scripts\python.exe"
 set "APP_PY=%BAYAN_DIR%\bayansynthtts\app.py"
 
-if not exist "%VENV_PY%" (
-    echo [run_ui] ERROR: venv not found at:
-    echo           %VENV_PY%
-    echo         Create it from the repo root:
+:: Look for venv inside BayanSynthTTS/ first (standalone), then parent dir (dev)
+if exist "%BAYAN_DIR%\.venv\Scripts\python.exe" (
+    set "VENV_PY=%BAYAN_DIR%\.venv\Scripts\python.exe"
+) else if exist "%BAYAN_DIR%\..\..venv\Scripts\python.exe" (
+    set "VENV_PY=%BAYAN_DIR%\..\..venv\Scripts\python.exe"
+) else if exist "%BAYAN_DIR%\..\.venv\Scripts\python.exe" (
+    set "VENV_PY=%BAYAN_DIR%\..\.venv\Scripts\python.exe"
+) else (
+    echo [run_ui] ERROR: No virtual environment found.
+    echo         Create one inside BayanSynthTTS/:
+    echo           cd BayanSynthTTS
     echo           python -m venv .venv
-    echo           .venv\Scripts\pip install -r BayanSynthTTS\requirements.txt
+    echo           .venv\Scripts\pip install -r requirements.txt
+    echo           .venv\Scripts\pip install -e .
     exit /b 1
 )
 
@@ -22,6 +28,6 @@ if not exist "%APP_PY%" (
     exit /b 1
 )
 
-cd /d "%REPO_ROOT%"
+cd /d "%BAYAN_DIR%"
 echo Starting BayanSynthTTS UI at http://localhost:7865 ...
 "%VENV_PY%" "%APP_PY%" --port 7865
