@@ -11,6 +11,8 @@
 | Arabic TTS | Natural-sounding Modern Standard Arabic |
 | Auto-Tashkeel | Automatic diacritization via mishkal (always on) |
 | Voice Cloning | Clone any voice from a 5–15s clip (WAV/MP3/OGG/M4A/FLAC) |
+| Example voices | Two reference voices (`default.wav` and `muffled-talking.wav`) are included; add your own to `voices/` |
+
 | LoRA Swapping | Change checkpoints via `conf/models.yaml` — no code edits |
 | Streaming | Chunk-by-chunk audio generation |
 | Gradio UI | Simple web interface included |
@@ -43,8 +45,8 @@ pip install -e .               # installs bayansynthtts + bundled packages into 
 
 > The CosyVoice3 inference engine and Matcha-TTS decoder are **bundled directly in this repo** — no external private repos required.
 >
-> **First-run note:** when Python loads the model for the first time it downloads a small Chinese/English text normalizer (~30 MB) to your local cache (`~/.cache/modelscope`). This is a one-time download and is only needed internally by the audio engine — your Arabic text goes through a separate pipeline.
-
+> **Example voices:** two reference clips (`default.wav` and `muffled-talking.wav`) live in `voices/`. Drop additional 5‑15 s recordings there and they automatically appear in the CLI/UI dropdown.
+> 
 ### 2. Download models
 
 ```bash
