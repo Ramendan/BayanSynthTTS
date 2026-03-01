@@ -32,14 +32,14 @@
 
 All clips below were generated with this library — no post-processing applied.
 
-| # | Description | Listen |
-|---|-------------|--------|
-| 1 | Basic Arabic (auto-tashkeel on) | ▶ [samples/01_basic.wav](samples/01_basic.wav) |
-| 2 | Pre-diacritized text (tashkeel off) | ▶ [samples/02_prediacritized.wav](samples/02_prediacritized.wav) |
-| 3 | Voice cloning – muffled-talking voice | ▶ [samples/03_voice_muffled.wav](samples/03_voice_muffled.wav) |
-| 4 | Longer text passage | ▶ [samples/04_long_text.wav](samples/04_long_text.wav) |
-| 5 | Slow speed (0.80×) | ▶ [samples/05_slow_speed.wav](samples/05_slow_speed.wav) |
-| 6 | Fast speed (1.20×) | ▶ [samples/06_fast_speed.wav](samples/06_fast_speed.wav) |
+| # | Description | Duration | Listen |
+|---|-------------|----------|--------|
+| 1 | Basic Arabic — plain text, auto-tashkeel on | ~8 s | ▶ [samples/01_basic.wav](samples/01_basic.wav) |
+| 2 | Pre-diacritized text — mishkal skipped | ~7 s | ▶ [samples/02_prediacritized.wav](samples/02_prediacritized.wav) |
+| 3 | Voice cloning — muffled-talking.wav reference | ~10 s | ▶ [samples/03_voice_cloning.wav](samples/03_voice_cloning.wav) |
+| 4 | Longer passage — AI technology topic | ~15 s | ▶ [samples/04_long_text.wav](samples/04_long_text.wav) |
+| 5 | Slow speed (0.80×) | ~10 s | ▶ [samples/05_slow_speed.wav](samples/05_slow_speed.wav) |
+| 6 | Fast speed (1.20×) | ~5 s | ▶ [samples/06_fast_speed.wav](samples/06_fast_speed.wav) |
 
 > Click any link — GitHub opens the file page with its built-in audio player.
 
@@ -95,10 +95,16 @@ from bayansynthtts import BayanSynthTTS
 
 tts = BayanSynthTTS()
 
-# Plain Arabic — diacritics added automatically
-audio = tts.synthesize("مرحبا بكم في اختبار النظام")
+# Plain Arabic — mishkal adds diacritics automatically before synthesis
+audio = tts.synthesize(
+    "مرحبا، أنا بيان، مساعدك الصوتي باللغة العربية. يسعدني مساعدتك في أي وقت."
+)
 tts.save_wav(audio, "output.wav")
 ```
+
+> **auto_tashkeel=True** (default) passes the text through **mishkal** before inference,  
+> so plain unvocalized Arabic produces natural, correctly-stressed speech.  
+> Pass `auto_tashkeel=False` only when your text is already fully diacritized.
 
 ▶ **[Listen — 01_basic.wav](samples/01_basic.wav)**
 
@@ -107,8 +113,10 @@ tts.save_wav(audio, "output.wav")
 ### Pre-diacritized text (skip auto-tashkeel)
 
 ```python
+# When text is already fully vowelled, disable mishkal to preserve exact pronunciation
 audio = tts.synthesize(
-    "مَرْحَباً بِكُمْ فِي اخْتِبَارِ نِظَامِ تَحْوِيلِ النَّصِّ إِلَى كَلَامٍ",
+    "إِنَّ اللُّغَةَ الْعَرَبِيَّةَ كَنْزٌ مِنَ الثَّقَافَةِ وَالتُّرَاثِ، "
+    "وَهِيَ لُغَةُ الْقُرْآنِ الْكَرِيمِ وَالشِّعْرِ الْعَرَبِيِّ الْعَرِيقِ.",
     auto_tashkeel=False,
 )
 tts.save_wav(audio, "output.wav")
@@ -121,16 +129,30 @@ tts.save_wav(audio, "output.wav")
 ### Voice cloning
 
 ```python
-# Use a different bundled voice
-audio = tts.synthesize("مرحبا بكم في تجربة استنساخ الصوت",
-                        ref_audio="voices/muffled-talking.wav")
+# Use the bundled muffled-talking voice (trim it to 5–15 s first for best results)
+import soundfile as sf
+import numpy as np
+
+# Trim reference to 10 s
+data, sr = sf.read("voices/muffled-talking.wav", dtype="float32")
+sf.write("voices/muffled_trim.wav", data[:sr * 10], sr, subtype="PCM_16")
+
+audio = tts.synthesize(
+    "هَذَا الصَّوْتُ مُسْتَنْسَخٌ مِنْ مَقْطَعٍ صَوْتِيٍّ قَصِيرٍ. "
+    "يُمْكِنُكَ اسْتِخْدَامُ أَيِّ مَقْطَعٍ بِمُدَّةِ خَمْسٍ إِلَى خَمْسَ عَشَرَةَ ثَانِيَةً.",
+    ref_audio="voices/muffled_trim.wav",
+    auto_tashkeel=False,
+)
 tts.save_wav(audio, "output.wav")
 
-# Or clone any external clip (any format — auto-converted to 24 kHz mono WAV)
+# Or clone any clip in any format (mp3/m4a/ogg/flac — auto-converted internally)
 audio = tts.synthesize("مَرْحَباً", ref_audio="my_voice.mp3")
 ```
 
-▶ **[Listen — 03_voice_muffled.wav](samples/03_voice_muffled.wav)** *(muffled-talking.wav reference)*
+> **Tip:** Keep reference clips to **5–15 seconds** — single speaker, quiet room, no music.  
+> Longer clips (>15 s) cause `instruct2` to fail silently and fall back to a lower-quality mode.
+
+▶ **[Listen — 03_voice_cloning.wav](samples/03_voice_cloning.wav)** *(muffled-talking.wav, trimmed to 10 s)*
 
 ---
 
@@ -138,8 +160,10 @@ audio = tts.synthesize("مَرْحَباً", ref_audio="my_voice.mp3")
 
 ```python
 audio = tts.synthesize(
-    "اللغة العربية لغة سامية تُعدّ من أكثر اللغات انتشاراً في العالم، "
-    "وتحتل مكانةً مرموقةً بوصفها لغة القرآن الكريم"
+    "الذكاء الاصطناعي هو أحد أبرز التطورات التكنولوجية في عصرنا الحديث. "
+    "يعتمد على تحليل كميات ضخمة من البيانات لاستخلاص أنماط معقدة. "
+    "ومن أبرز تطبيقاته نظم التعرف على الصوت وترجمة اللغات وتوليد النصوص.",
+    auto_tashkeel=True,
 )
 tts.save_wav(audio, "output.wav")
 ```
@@ -151,12 +175,18 @@ tts.save_wav(audio, "output.wav")
 ### Speed control
 
 ```python
+TEXT = "مَرْحَباً بِكُمْ فِي بَيَانْ سِينْثِ. هَذَا تَوْلِيدٌ بِسُرْعَةٍ مُخَفَّضَةٍ لِلتَّوْضِيحِ."
+
 # Slower speech (0.80×)
-audio = tts.synthesize("مَرْحَباً بِكُمْ فِي بَيَانْ سِينْثِ", speed=0.80)
+audio = tts.synthesize(TEXT, speed=0.80, auto_tashkeel=False)
 tts.save_wav(audio, "slow.wav")
 
 # Faster speech (1.20×)
-audio = tts.synthesize("مَرْحَباً بِكُمْ فِي بَيَانْ سِينْثِ", speed=1.20)
+audio = tts.synthesize(
+    "مَرْحَباً بِكُمْ فِي بَيَانْ سِينْثِ. هَذَا تَوْلِيدٌ بِسُرْعَةٍ مُرْتَفَعَةٍ لِلتَّوْضِيحِ.",
+    speed=1.20,
+    auto_tashkeel=False,
+)
 tts.save_wav(audio, "fast.wav")
 ```
 
@@ -295,12 +325,12 @@ BayanSynthTTS/
 │   ├── muffled-talking.wav # Additional bundled voice
 │   └── README.md
 ├── samples/                # Pre-generated audio demos (tracked in git)
-│   ├── 01_basic.wav
-│   ├── 02_prediacritized.wav
-│   ├── 03_voice_muffled.wav
-│   ├── 04_long_text.wav
-│   ├── 05_slow_speed.wav
-│   └── 06_fast_speed.wav
+│   ├── 01_basic.wav                # plain Arabic → auto-tashkeel → speech
+│   ├── 02_prediacritized.wav       # fully-vowelled input, tashkeel off
+│   ├── 03_voice_cloning.wav        # voice-cloned from muffled-talking.wav
+│   ├── 04_long_text.wav            # ~15 s multi-sentence passage
+│   ├── 05_slow_speed.wav           # speed=0.80
+│   └── 06_fast_speed.wav           # speed=1.20
 ├── scripts/
 │   ├── setup_models.py     # One-time setup (download base model, check deps)
 │   ├── setup_models.bat    # Windows wrapper
