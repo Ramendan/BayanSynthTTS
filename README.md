@@ -12,8 +12,7 @@
 | Auto-Tashkeel | Automatic diacritization via mishkal (always on) |
 | Voice Cloning | Clone any voice from a 5–15s clip (WAV/MP3/OGG/M4A/FLAC) |
 | Example voices | Two reference voices (`default.wav` and `muffled-talking.wav`) are included; add your own to `voices/` |
-
-| LoRA Swapping | Change checkpoints via `conf/models.yaml` — no code edits |
+| LoRA Swapping | Change checkpoints via `conf/models.yaml` no code edits |
 | Streaming | Chunk-by-chunk audio generation |
 | Gradio UI | Simple web interface included |
 | CLI | One-liner inference from terminal |
