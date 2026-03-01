@@ -7,9 +7,7 @@
 setlocal
 set "REPO_ROOT=%~dp0..\.."
 set "SRC_LLM=%REPO_ROOT%\bayansynth\exp\llm_improved\epoch_28_whole.pt"
-set "SRC_FLOW=%REPO_ROOT%\bayansynth\exp\flow\epoch_15_step_49000.pt"
 set "DST_LLM=%~dp0..\checkpoints\llm"
-set "DST_FLOW=%~dp0..\checkpoints\flow"
 
 echo.
 echo === Copying LoRA checkpoints to BayanSynthTTS/checkpoints/ ===
@@ -23,16 +21,6 @@ if exist "%SRC_LLM%" (
 ) else (
     echo [--] LLM LoRA not found at: %SRC_LLM%
     echo      Train first or adjust the path in this script.
-)
-
-:: Flow LoRA
-if exist "%SRC_FLOW%" (
-    if not exist "%DST_FLOW%" mkdir "%DST_FLOW%"
-    copy /Y "%SRC_FLOW%" "%DST_FLOW%\" >nul
-    echo [OK] Flow LoRA → %DST_FLOW%\epoch_15_step_49000.pt
-) else (
-    echo [--] Flow LoRA not found at: %SRC_FLOW%
-    echo      This is optional — flow LoRA is disabled by default.
 )
 
 echo.

@@ -10,8 +10,8 @@
 # ── Base model ──────────────────────────────────────────────────────────────
 base_model:
   # CosyVoice3 pretrained weights.
-  # Download: python BayanSynthTTS/scripts/setup_models.py
-  model_dir: "../pretrained_models/CosyVoice3"
+  # Download: python scripts/setup_models.py
+  model_dir: "pretrained_models/CosyVoice3"
 
 # ── LLM LoRA adapter ────────────────────────────────────────────────────────
 # To swap: change `checkpoint` to your new .pt file (relative to BayanSynthTTS/).

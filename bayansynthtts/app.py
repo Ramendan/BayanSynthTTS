@@ -15,15 +15,14 @@ import os
 import sys
 from pathlib import Path
 
-# Ensure repo root is on the path (for cosyvoice/ and third_party/)
-REPO_ROOT = str(Path(__file__).resolve().parent.parent.parent)
-if REPO_ROOT not in sys.path:
-    sys.path.insert(0, REPO_ROOT)
-
-BAYAN_DIR = str(Path(__file__).resolve().parent.parent)  # BayanSynthTTS/
-
 import gradio as gr
-import numpy as np
+
+# Ensure bundled cosyvoice + matcha packages are importable when running from
+# the repo root without `pip install -e .`
+BAYAN_DIR = str(Path(__file__).resolve().parent.parent)  # BayanSynthTTS/
+_pkg_root = BAYAN_DIR
+if _pkg_root not in sys.path:
+    sys.path.insert(0, _pkg_root)
 
 # ── Lazy model loading ────────────────────────────────────────────────────
 _TTS_INSTANCE = None
@@ -47,7 +46,7 @@ def _list_voices() -> list[tuple[str, str]]:
                 choices.append((Path(f).stem, os.path.join(voices_dir, f)))
     # Fallback to asset prompt if voices folder is empty
     if not choices:
-        asset = os.path.join(REPO_ROOT, "asset", "zero_shot_prompt.wav")
+        asset = os.path.join(BAYAN_DIR, "asset", "zero_shot_prompt.wav")
         if os.path.isfile(asset):
             choices.append(("Default Voice", asset))
     return choices

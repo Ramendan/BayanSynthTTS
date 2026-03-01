@@ -37,6 +37,9 @@ dependencies = [
     "transformers>=4.40",
     "omegaconf>=2.3",
     "hyperpyyaml",
+    "einops>=0.6",              # used by bundled cosyvoice flow/hifigan
+    "scipy>=1.10",              # used by bundled cosyvoice hifigan
+    "onnxruntime>=1.18",        # ONNX speaker encoder / speech tokenizer
 ]
 
 [project.optional-dependencies]
@@ -55,7 +58,7 @@ bayansynthtts-ui = "bayansynthtts.app:main"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["bayansynthtts*"]
+include = ["bayansynthtts*", "cosyvoice*", "matcha*"]
 
 [tool.ruff]
 line-length = 100

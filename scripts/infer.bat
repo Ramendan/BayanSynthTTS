@@ -7,13 +7,24 @@
 ::   infer.bat --help
 
 setlocal
-set "REPO_ROOT=%~dp0..\.."
-set "VENV_PY=%REPO_ROOT%\.venv\Scripts\python.exe"
+set "BAYAN_DIR=%~dp0.."
 
-if not exist "%VENV_PY%" (
-    echo [infer] venv not found at %VENV_PY%
+:: Look for venv inside BayanSynthTTS/ first (standalone), then parent dir (dev)
+if exist "%BAYAN_DIR%\.venv\Scripts\python.exe" (
+    set "VENV_PY=%BAYAN_DIR%\.venv\Scripts\python.exe"
+) else if exist "%BAYAN_DIR%\..\..venv\Scripts\python.exe" (
+    set "VENV_PY=%BAYAN_DIR%\..\..venv\Scripts\python.exe"
+) else if exist "%BAYAN_DIR%\..\.venv\Scripts\python.exe" (
+    set "VENV_PY=%BAYAN_DIR%\..\.venv\Scripts\python.exe"
+) else (
+    echo [infer] ERROR: No virtual environment found.
+    echo         Create one inside BayanSynthTTS/:
+    echo           cd BayanSynthTTS
+    echo           python -m venv .venv
+    echo           .venv\Scripts\pip install -r requirements.txt
+    echo           .venv\Scripts\pip install -e .
     exit /b 1
 )
 
-cd /d "%REPO_ROOT%"
+cd /d "%BAYAN_DIR%"
 "%VENV_PY%" -m bayansynthtts.inference %*

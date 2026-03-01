@@ -15,50 +15,55 @@
 | Streaming | Chunk-by-chunk audio generation |
 | Gradio UI | Simple web interface included |
 | CLI | One-liner inference from terminal |
+| Multilingual base model | CosyVoice3 supports many languages; this package ships with an Arabic LoRA by default |
+
 
 ---
 
+> **Multilingual note:** the underlying CosyVoice3 base model is trained for zero-shot
+> synthesis across a wide range of languages. BayanSynthTTS currently defaults to an
+> Arabic-conditioned LoRA checkpoint and delivers the best results in Modern Standard
+> Arabic. You are free to plug in other LoRA files (not provided here) for additional
+> languages, though quality may vary.
+
+
 ## Quick Start
 
-### 1. Prerequisites
-
-This library lives inside the [CosyVoice-Arabic](https://github.com/Ramendan/CosyVoice-Arabic) repo.
-Clone the main repo first, then install dependencies:
+### 1. Clone and install
 
 ```bash
-git clone https://github.com/Ramendan/CosyVoice-Arabic
-cd CosyVoice-Arabic
-python -m venv .venv && .venv\Scripts\activate   # Windows
-pip install -r BayanSynthTTS/requirements.txt
+git clone https://github.com/Ramendan/BayanSynthTTS
+cd BayanSynthTTS
+python -m venv .venv
+.venv\Scripts\activate         # Windows
+# source .venv/bin/activate   # Linux / macOS
+pip install -r requirements.txt
+pip install -e .               # installs bayansynthtts + bundled packages into the venv
 ```
 
-### 2. Download the base model + set up checkpoints
+> The CosyVoice3 inference engine and Matcha-TTS decoder are **bundled directly in this repo** — no external private repos required.
+>
+> **First-run note:** when Python loads the model for the first time it downloads a small Chinese/English text normalizer (~30 MB) to your local cache (`~/.cache/modelscope`). This is a one-time download and is only needed internally by the audio engine — your Arabic text goes through a separate pipeline.
+
+### 2. Download models
 
 ```bash
-python BayanSynthTTS/scripts/setup_models.py
+python scripts/setup_models.py
 ```
 
-This will:
-- Download CosyVoice3 weights from Hugging Face Hub
-- Check if LoRA checkpoints exist in `BayanSynthTTS/checkpoints/`
-- Copy the default reference voice
+This downloads everything automatically:
+- CosyVoice3 base weights (~2 GB) from Hugging Face → `pretrained_models/CosyVoice3/`
+- Arabic LoRA checkpoint from GitHub Releases → `checkpoints/llm/epoch_28_whole.pt`
+- Verifies the checkpoint SHA-256
 
-### 3. Add LoRA checkpoints
+> On Windows you can also double-click `scripts\setup_models.bat`.
 
-Copy your trained `.pt` file to:
-```
-BayanSynthTTS/
-└── checkpoints/
-    └── llm/
-        └── epoch_28_whole.pt       <- LLM LoRA (required for best Arabic quality)
-```
-
-### 4. Run
+### 3. Run
 
 **Web UI:**
 ```bash
-scripts\run_ui.bat            # Windows
-python bayansynthtts/app.py   # Cross-platform
+scripts\run_ui.bat            # Windows GUI launcher
+python bayansynthtts/app.py   # Cross-platform (run from inside BayanSynthTTS/)
 ```
 
 **Python API:**
@@ -197,8 +202,12 @@ BayanSynthTTS/
 │   ├── inference.py        # Core TTS engine + LoRA injection
 │   ├── tashkeel.py         # Arabic diacritization (mishkal + tashkeel)
 │   └── app.py              # Gradio web UI
+├── cosyvoice/              # Bundled CosyVoice3 engine (Apache 2.0)
+├── matcha/                 # Bundled Matcha-TTS / HiFi-GAN decoder (Apache 2.0)
 ├── checkpoints/            # LoRA checkpoints (not tracked in git)
 │   └── llm/                # LLM LoRA .pt files
+├── pretrained_models/      # CosyVoice3 base weights (~2 GB, not tracked in git)
+│   └── CosyVoice3/
 ├── conf/
 │   └── models.yaml         # ← Edit this to swap models / defaults
 ├── voices/
@@ -253,6 +262,48 @@ list_available_backends()              # → ['mishkal']  (or ['tashkeel', 'mish
 
 ---
 
+## Hosting Checkpoints on Hugging Face (Faster Downloads)
+
+Checkpoints hosted on **Hugging Face Hub** benefit from global CDN, resume-on-failure, and are often faster to download than GitHub Releases (especially outside the US).
+
+### Upload your LoRA checkpoint to HF
+
+```bash
+pip install huggingface_hub
+huggingface-cli login              # enter your HF token (write access)
+
+# Create a new HF model repo (one time)
+huggingface-cli repo create BayanSynthTTS-checkpoints --type model
+
+# Upload the checkpoint
+huggingface-cli upload Ramendan/BayanSynthTTS-checkpoints \
+    checkpoints/llm/epoch_28_whole.pt epoch_28_whole.pt
+```
+
+### Point setup_models.py at HF instead of GitHub Releases
+
+In [scripts/setup_models.py](scripts/setup_models.py), replace the `download_checkpoints` call with a HF download:
+
+```python
+from huggingface_hub import hf_hub_download
+
+def download_checkpoints_hf(repo_id: str, force: bool = False) -> None:
+    for filename, rel_dest in CHECKPOINT_FILES.items():
+        dest = BAYAN_DIR / rel_dest
+        if dest.exists() and not force:
+            print(f"[setup] {filename} already present")
+            continue
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        hf_hub_download(repo_id=repo_id, filename=filename, local_dir=str(dest.parent))
+        print(f"[setup] Downloaded {filename} from HF")
+```
+
+Then call `download_checkpoints_hf("Ramendan/BayanSynthTTS-checkpoints")` instead.
+
+> This is optional — GitHub Releases works fine for most users. HF is recommended if you find downloads are slow or unreliable.
+
+---
+
 ## GitHub Repo Setup
 
 ### Step 1 — Push the code (no checkpoints in git)
@@ -264,8 +315,8 @@ git init
 git add .
 git commit -m "Initial BayanSynthTTS library — inference only"
 
-# Create a new repo on GitHub (e.g. https://github.com/YOUR_USER/BayanSynthTTS)
-git remote add origin https://github.com/YOUR_USER/BayanSynthTTS
+# Create a new repo on GitHub (e.g. https://github.com/Ramendan/BayanSynthTTS)
+git remote add origin https://github.com/Ramendan/BayanSynthTTS
 git branch -M main
 git push -u origin main
 ```
@@ -296,12 +347,12 @@ gh release upload v1.0 checkpoints/llm/epoch_28_whole.pt
 
 In [scripts/setup_models.py](scripts/setup_models.py), update:
 ```python
-GITHUB_RELEASE_URL = "https://github.com/YOUR_USER/BayanSynthTTS/releases/download/v1.0"
+GITHUB_RELEASE_URL = "https://github.com/Ramendan/BayanSynthTTS/releases/download/v1.0"
 ```
 
 Commit and push. Users now get everything with:
 ```bash
-git clone https://github.com/YOUR_USER/BayanSynthTTS
+git clone https://github.com/Ramendan/BayanSynthTTS
 cd BayanSynthTTS
 pip install -r requirements.txt
 python scripts/setup_models.py   # downloads base model + LoRA checkpoints
@@ -314,12 +365,15 @@ scripts\run_ui.bat
 
 | Problem | Solution |
 |---------|---------|
-| `No module named 'cosyvoice'` | Run from the CosyVoice-Arabic repo root; add it to `sys.path` |
-| `No LLM checkpoint found` | Copy `.pt` to `BayanSynthTTS/checkpoints/llm/` |
+| `No module named 'cosyvoice'` | Run `pip install -e .` from inside `BayanSynthTTS/`. The `.bat` scripts need the venv **inside** `BayanSynthTTS/` (i.e. `BayanSynthTTS/.venv/`). |
+| `No LLM checkpoint found` | Run `python scripts/setup_models.py` or manually copy `.pt` to `checkpoints/llm/` |
 | `mishkal not found` | `pip install mishkal` |
 | No audio generated | Check console for the specific mode that failed; verify `voices/default.wav` exists |
-| MP3/M4A upload fails | Install ffmpeg: `winget install ffmpeg` |
-| `huggingface_hub>=1.0` error | `pip install "huggingface_hub<1.0"` — do NOT upgrade to ≥1.0 |
+| MP3/M4A upload fails | Install ffmpeg: `winget install ffmpeg` (Windows) or `sudo apt install ffmpeg` (Linux) |
+| `ONNX CUDAExecutionProvider not available` | Expected on CPU-only machines or when `onnxruntime-gpu` is not installed. Inference still works on CPU. |
+| First-run downloads from modelscope.cn | Expected — the `wetext` text normalizer downloads its model (~30 MB) once to `~/.cache/modelscope`. It's cached after the first run. |
+| `scripts\run_ui.bat` says "venv not found" | Make sure you created the venv **inside** `BayanSynthTTS/` with `python -m venv .venv` and ran `pip install -r requirements.txt && pip install -e .` from there. |
+| `huggingface_hub` version conflict | Keep `huggingface_hub<1.0` as pinned. If you see errors, run `pip install "huggingface_hub<1.0"` |
 
 ---
 
