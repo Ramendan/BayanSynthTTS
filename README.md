@@ -32,16 +32,23 @@
 
 All clips below were generated with this library — no post-processing applied.
 
-| # | Description | Duration | Listen |
-|---|-------------|----------|--------|
-| 1 | Basic Arabic — plain text, auto-tashkeel on | ~8 s | ▶ [samples/01_basic.wav](samples/01_basic.wav) |
-| 2 | Pre-diacritized text — mishkal skipped | ~7 s | ▶ [samples/02_prediacritized.wav](samples/02_prediacritized.wav) |
-| 3 | Voice cloning — muffled-talking.wav reference | ~10 s | ▶ [samples/03_voice_cloning.wav](samples/03_voice_cloning.wav) |
-| 4 | Longer passage — AI technology topic | ~15 s | ▶ [samples/04_long_text.wav](samples/04_long_text.wav) |
-| 5 | Slow speed (0.80×) | ~10 s | ▶ [samples/05_slow_speed.wav](samples/05_slow_speed.wav) |
-| 6 | Fast speed (1.20×) | ~5 s | ▶ [samples/06_fast_speed.wav](samples/06_fast_speed.wav) |
+> GitHub does not support embedded audio players in Markdown files.  
+> Click any link below — GitHub opens the file page with a built-in player where you can press play directly.
 
-> Click any link — GitHub opens the file page with its built-in audio player.
+| # | Description | Dur | Listen |
+|---|-------------|-----|--------|
+| 1 | Basic — “aهلا انا بيانسينث” auto-tashkeel | ~3 s | ▶ [01_basic.wav](samples/01_basic.wav) |
+| 2 | Pre-diacritized text, mishkal off | ~7 s | ▶ [02_prediacritized.wav](samples/02_prediacritized.wav) |
+| 3 | Voice clone — muffled voice (ref below) | ~10 s | ▶ [03_voice_cloning.wav](samples/03_voice_cloning.wav) |
+|   ↳ | Reference clip used above | 10 s | 🎤 [ref_voice_muffled.wav](samples/ref_voice_muffled.wav) |
+| 4 | Longer passage — AI topic, 3 sentences | ~15 s | ▶ [04_long_text.wav](samples/04_long_text.wav) |
+| 5 | Slow speed (0.80×) | ~10 s | ▶ [05_slow_speed.wav](samples/05_slow_speed.wav) |
+| 6 | Fast speed (1.20×) | ~5 s | ▶ [06_fast_speed.wav](samples/06_fast_speed.wav) |
+| 7 | 🔊 Phonetics test — حلقيات / tanwin / shaddah | ~7 s | ▶ [07_phonetics.wav](samples/07_phonetics.wav) |
+| 8 | 🌊 Flow & rhythm — connected speech | ~10 s | ▶ [08_flow.wav](samples/08_flow.wav) |
+| 9 | 🧩 Challenge — عَلِم / عَالِم / عَلَم disambiguation | ~5 s | ▶ [09_challenge.wav](samples/09_challenge.wav) |
+| 10 | Phonetics — alternate seed (seed=99) | ~4 s | ▶ [10_phonetics_s2.wav](samples/10_phonetics_s2.wav) |
+| 11 | Flow — alternate seed (seed=99) | ~9 s | ▶ [11_flow_s2.wav](samples/11_flow_s2.wav) |
 
 ---
 
@@ -95,15 +102,13 @@ from bayansynthtts import BayanSynthTTS
 
 tts = BayanSynthTTS()
 
-# Plain Arabic — mishkal adds diacritics automatically before synthesis
-audio = tts.synthesize(
-    "مرحبا، أنا بيان، مساعدك الصوتي باللغة العربية. يسعدني مساعدتك في أي وقت."
-)
+# Plain Arabic — mishkal automatically adds full diacritics before synthesis
+audio = tts.synthesize("اهلا انا بيانسينث")
 tts.save_wav(audio, "output.wav")
 ```
 
-> **auto_tashkeel=True** (default) passes the text through **mishkal** before inference,  
-> so plain unvocalized Arabic produces natural, correctly-stressed speech.  
+> **auto_tashkeel=True** (default) runs the text through **mishkal** before inference —  
+> plain unvocalized Arabic produces natural, correctly-stressed speech.  
 > Pass `auto_tashkeel=False` only when your text is already fully diacritized.
 
 ▶ **[Listen — 01_basic.wav](samples/01_basic.wav)**
@@ -152,7 +157,8 @@ audio = tts.synthesize("مَرْحَباً", ref_audio="my_voice.mp3")
 > **Tip:** Keep reference clips to **5–15 seconds** — single speaker, quiet room, no music.  
 > Longer clips (>15 s) cause `instruct2` to fail silently and fall back to a lower-quality mode.
 
-▶ **[Listen — 03_voice_cloning.wav](samples/03_voice_cloning.wav)** *(muffled-talking.wav, trimmed to 10 s)*
+🎤 **Reference clip used above:** [ref_voice_muffled.wav](samples/ref_voice_muffled.wav) *(muffled-talking.wav trimmed to 10 s)*  
+▶ **[Listen — 03_voice_cloning.wav](samples/03_voice_cloning.wav)**
 
 ---
 
@@ -169,6 +175,60 @@ tts.save_wav(audio, "output.wav")
 ```
 
 ▶ **[Listen — 04_long_text.wav](samples/04_long_text.wav)**
+
+---
+
+### Phonetics test — حلقيات, tanwin, shaddah
+
+Designed to exercise pharyngeal/velar consonants, gemination, and nunation at once:
+
+```python
+audio = tts.synthesize(
+    "الْجَوْدَةُ الْعَالِيَةُ لِتَقْنِيَّاتِ الذَّكَاءِ الاصْطِنَاعِيِّ "
+    "تُسَاهِمُ فِي بِنَاءِ مُسْتَقْبَلٍ بَاهِرٍ لِلْأَجْيَالِ.",
+    auto_tashkeel=False,
+)
+tts.save_wav(audio, "output.wav")
+```
+
+▶ **[Listen — 07_phonetics.wav](samples/07_phonetics.wav)** *(seed=42)*  
+▶ **[Listen — 10_phonetics_s2.wav](samples/10_phonetics_s2.wav)** *(seed=99 — different prosody variation)*
+
+---
+
+### Flow & Rhythm test — connected speech
+
+Tests natural sandhi, liaison, and intonation across a multi-clause sentence:
+
+```python
+audio = tts.synthesize(
+    "إِنَّ نِظَامَ بَيَانِ سِينْث يَهْدِفُ إِلَى تَقْدِيمِ تَجْرِبَةٍ صَوْتِيَّةٍ فَرِيدَةٍ، "
+    "تَجْمَعُ بَيْنَ دِقَّةِ النُّطْقِ وَجَمَالِ الْأَدَاءِ.",
+    auto_tashkeel=False,
+)
+tts.save_wav(audio, "output.wav")
+```
+
+▶ **[Listen — 08_flow.wav](samples/08_flow.wav)** *(seed=42)*  
+▶ **[Listen — 11_flow_s2.wav](samples/11_flow_s2.wav)** *(seed=99 — different prosody variation)*
+
+---
+
+### Challenge test — tashkeel disambiguation
+
+All five ع-rooted words differ **only** by their diacritics; correct rendering proves the model reads harakat accurately:
+
+```python
+# عَلِم (he knew) vs عَالِم (scholar) vs عَلَم (flag) vs عِلْم (knowledge)
+audio = tts.synthesize(
+    "عَلِمَ الْعَالِمُ أَنَّ الْعَلَمَ يَعْلُو بِالْعِلْمِ، "
+    "فَاسْتَعْلَمَ عَنْ عُلُومِ الْأَوَّلِينَ.",
+    auto_tashkeel=False,
+)
+tts.save_wav(audio, "output.wav")
+```
+
+▶ **[Listen — 09_challenge.wav](samples/09_challenge.wav)**
 
 ---
 
@@ -325,12 +385,18 @@ BayanSynthTTS/
 │   ├── muffled-talking.wav # Additional bundled voice
 │   └── README.md
 ├── samples/                # Pre-generated audio demos (tracked in git)
-│   ├── 01_basic.wav                # plain Arabic → auto-tashkeel → speech
-│   ├── 02_prediacritized.wav       # fully-vowelled input, tashkeel off
+│   ├── 01_basic.wav                #  "اهلا انا بيانسينث" → auto-tashkeel
+│   ├── 02_prediacritized.wav       # fully-vowelled classical Arabic
 │   ├── 03_voice_cloning.wav        # voice-cloned from muffled-talking.wav
-│   ├── 04_long_text.wav            # ~15 s multi-sentence passage
+│   ├── 04_long_text.wav            # ~15 s multi-sentence AI topic
 │   ├── 05_slow_speed.wav           # speed=0.80
-│   └── 06_fast_speed.wav           # speed=1.20
+│   ├── 06_fast_speed.wav           # speed=1.20
+│   ├── 07_phonetics.wav            # حلقيات / tanwin / shaddah test (seed=42)
+│   ├── 08_flow.wav                 # flow & rhythm test (seed=42)
+│   ├── 09_challenge.wav            # عَلِم/عَالِم/عَلَم tashkeel disambiguation
+│   ├── 10_phonetics_s2.wav         # same as 07, seed=99 (prosody variation)
+│   ├── 11_flow_s2.wav              # same as 08, seed=99 (prosody variation)
+│   └── ref_voice_muffled.wav       # reference voice clip used for 03 (10 s)
 ├── scripts/
 │   ├── setup_models.py     # One-time setup (download base model, check deps)
 │   ├── setup_models.bat    # Windows wrapper
