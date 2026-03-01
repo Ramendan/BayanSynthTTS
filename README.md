@@ -53,7 +53,7 @@ python scripts/setup_models.py
 
 This downloads everything automatically:
 - CosyVoice3 base weights (~2 GB) from Hugging Face → `pretrained_models/CosyVoice3/`
-- Arabic LoRA checkpoint from GitHub Releases → `checkpoints/llm/epoch_28_whole.pt`
+- Arabic LoRA checkpoint from Hugging Face → `checkpoints/llm/epoch_28_whole.pt`
 - Verifies the checkpoint SHA-256
 
 > On Windows you can also double-click `scripts\setup_models.bat`.
@@ -258,105 +258,6 @@ auto_diacritize("مرحبا بكم")          # → "مَرْحَباً بِكُ
 has_harakat("مَرْحَباً")              # → True
 strip_harakat("مَرْحَباً")            # → "مرحبا"
 list_available_backends()              # → ['mishkal']  (or ['tashkeel', 'mishkal'])
-```
-
----
-
-## Hosting Checkpoints on Hugging Face (Faster Downloads)
-
-Checkpoints hosted on **Hugging Face Hub** benefit from global CDN, resume-on-failure, and are often faster to download than GitHub Releases (especially outside the US).
-
-### Upload your LoRA checkpoint to HF
-
-```bash
-pip install huggingface_hub
-huggingface-cli login              # enter your HF token (write access)
-
-# Create a new HF model repo (one time)
-huggingface-cli repo create BayanSynthTTS-checkpoints --type model
-
-# Upload the checkpoint
-huggingface-cli upload Ramendan/BayanSynthTTS-checkpoints \
-    checkpoints/llm/epoch_28_whole.pt epoch_28_whole.pt
-```
-
-### Point setup_models.py at HF instead of GitHub Releases
-
-In [scripts/setup_models.py](scripts/setup_models.py), replace the `download_checkpoints` call with a HF download:
-
-```python
-from huggingface_hub import hf_hub_download
-
-def download_checkpoints_hf(repo_id: str, force: bool = False) -> None:
-    for filename, rel_dest in CHECKPOINT_FILES.items():
-        dest = BAYAN_DIR / rel_dest
-        if dest.exists() and not force:
-            print(f"[setup] {filename} already present")
-            continue
-        dest.parent.mkdir(parents=True, exist_ok=True)
-        hf_hub_download(repo_id=repo_id, filename=filename, local_dir=str(dest.parent))
-        print(f"[setup] Downloaded {filename} from HF")
-```
-
-Then call `download_checkpoints_hf("Ramendan/BayanSynthTTS-checkpoints")` instead.
-
-> This is optional — GitHub Releases works fine for most users. HF is recommended if you find downloads are slow or unreliable.
-
----
-
-## GitHub Repo Setup
-
-### Step 1 — Push the code (no checkpoints in git)
-
-```bash
-cd BayanSynthTTS
-
-git init
-git add .
-git commit -m "Initial BayanSynthTTS library — inference only"
-
-# Create a new repo on GitHub (e.g. https://github.com/Ramendan/BayanSynthTTS)
-git remote add origin https://github.com/Ramendan/BayanSynthTTS
-git branch -M main
-git push -u origin main
-```
-
-> **Why no checkpoints in git?** `.pt` files are 100MB–1GB.  
-> GitHub blocks files >100MB and git history bloats permanently with large binaries.  
-> The `.gitignore` already excludes `checkpoints/` and `*.pt`.
-
-### Step 2 — Publish checkpoints as a GitHub Release asset
-
-```bash
-# Tag the release
-git tag v1.0
-git push origin v1.0
-```
-
-Then on GitHub: **Releases → Draft a new release → tag v1.0**  
-Attach these files as release assets:
-- `checkpoints/llm/epoch_28_whole.pt`
-
-Or use the GitHub CLI:
-```bash
-gh release create v1.0 --title "BayanSynthTTS v1.0"
-gh release upload v1.0 checkpoints/llm/epoch_28_whole.pt
-```
-
-### Step 3 — Update the release URL in setup_models.py
-
-In [scripts/setup_models.py](scripts/setup_models.py), update:
-```python
-GITHUB_RELEASE_URL = "https://github.com/Ramendan/BayanSynthTTS/releases/download/v1.0"
-```
-
-Commit and push. Users now get everything with:
-```bash
-git clone https://github.com/Ramendan/BayanSynthTTS
-cd BayanSynthTTS
-pip install -r requirements.txt
-python scripts/setup_models.py   # downloads base model + LoRA checkpoints
-scripts\run_ui.bat
 ```
 
 ---

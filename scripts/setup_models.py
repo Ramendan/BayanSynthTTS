@@ -3,50 +3,43 @@
 
 Downloads the CosyVoice3 base model and LoRA checkpoints.
 
-LoRA checkpoints are too large for git (100MB–1GB) and are distributed
-via GitHub Releases.  This script downloads them automatically.
-
 Usage:
-    # Full setup (base model + checkpoints from GitHub Releases)
-    python BayanSynthTTS/scripts/setup_models.py
-
-    # Custom GitHub release URL
-    python BayanSynthTTS/scripts/setup_models.py --release-url https://github.com/YOU/BayanSynthTTS/releases/download/v1.0
+    # Full setup (base model + checkpoints)
+    python scripts/setup_models.py
 
     # Skip base model download (already have it)
-    python BayanSynthTTS/scripts/setup_models.py --skip-base
+    python scripts/setup_models.py --skip-base
 
-    # Skip checkpoint download (only check what's present)
-    python BayanSynthTTS/scripts/setup_models.py --skip-checkpoints
+    # Skip checkpoint download (only check what is present)
+    python scripts/setup_models.py --skip-checkpoints
 """
 
 from __future__ import annotations
 
 import argparse
+import hashlib
 import os
 import re
 import shutil
 import sys
-import urllib.request
 from pathlib import Path
 
-# ── Paths ──────────────────────────────────────────────────────────────────
+# Paths
 SCRIPT_DIR  = Path(__file__).resolve().parent          # BayanSynthTTS/scripts/
-BAYAN_DIR   = SCRIPT_DIR.parent                         # BayanSynthTTS/
+BAYAN_DIR   = SCRIPT_DIR.parent                        # BayanSynthTTS/
 
 DEFAULT_MODEL_DIR = BAYAN_DIR / "pretrained_models" / "CosyVoice3"
 DEFAULT_LLM_CKPT  = BAYAN_DIR / "checkpoints" / "llm" / "epoch_28_whole.pt"
 DEFAULT_VOICE     = BAYAN_DIR / "voices" / "default.wav"
 ASSET_PROMPT_WAV  = BAYAN_DIR / "asset" / "zero_shot_prompt.wav"
 
-HF_REPO_ID = "FunAudioLLM/Fun-CosyVoice3-0.5B-2512"
+# Base CosyVoice3 model weights (Hugging Face)
+HF_BASE_REPO_ID = "FunAudioLLM/Fun-CosyVoice3-0.5B-2512"
 
-# GitHub Releases base URL for LoRA checkpoints.
-# Set to your own repo's release URL once you publish.
-# Format: https://github.com/OWNER/REPO/releases/download/TAG
-GITHUB_RELEASE_URL = "https://github.com/Ramendan/BayanSynthTTS/releases/download/v1.0"
+# LoRA checkpoints (Hugging Face)
+HF_CKPT_REPO_ID = "Ramendan/BayanSynthTTS-checkpoints"
 
-# Files to download from the release (filename → destination relative to BAYAN_DIR)
+# Files to download (filename -> destination relative to BAYAN_DIR)
 CHECKPOINT_FILES = {
     "epoch_28_whole.pt": "checkpoints/llm/epoch_28_whole.pt",
 }
@@ -55,49 +48,18 @@ CHECKPOINT_SHA256 = {
     "epoch_28_whole.pt": "805441555f4d829517e6bb79ba74ac23b65c40c8382802362b433d7e91ff8ca2",
 }
 
-# ── Helpers ────────────────────────────────────────────────────────────────
 
-def _download_file(url: str, dest: Path) -> bool:
-    """Download a file with a progress indicator. Returns True on success."""
-    dest.parent.mkdir(parents=True, exist_ok=True)
-    tmp = dest.with_suffix(".tmp")
-    try:
-        print(f"[setup] Downloading {url}")
-        print(f"         → {dest}")
-
-        def _progress(block_count, block_size, total):
-            if total > 0:
-                pct = min(100, block_count * block_size * 100 // total)
-                mb_done = block_count * block_size / 1_048_576
-                mb_total = total / 1_048_576
-                print(f"\r         {pct:3d}%  {mb_done:.0f}/{mb_total:.0f} MB", end="", flush=True)
-
-        urllib.request.urlretrieve(url, tmp, reporthook=_progress)
-        print()  # newline after progress
-        tmp.rename(dest)
-        size_mb = dest.stat().st_size / 1_048_576
-        print(f"[setup] Downloaded {dest.name}  ({size_mb:.0f} MB)")
-        # Verify SHA-256 if available
-        expected_sha = CHECKPOINT_SHA256.get(dest.name)
-        if expected_sha:
-            import hashlib
-            sha256 = hashlib.sha256(dest.read_bytes()).hexdigest()
-            if sha256 != expected_sha:
-                dest.unlink()
-                print(f"[setup] SHA-256 mismatch for {dest.name}!")
-                print(f"         Expected: {expected_sha}")
-                print(f"         Got:      {sha256}")
-                return False
-            print(f"[setup] SHA-256 verified: {dest.name}")
-        return True
-    except Exception as e:
-        print(f"\n[setup] Download failed: {e}")
-        if tmp.exists():
-            tmp.unlink()
+def _verify_sha256(path: Path, expected: str) -> bool:
+    """Return True if file matches expected SHA-256 hex digest."""
+    sha256 = hashlib.sha256(path.read_bytes()).hexdigest()
+    if sha256 != expected:
+        print(f"[setup] SHA-256 mismatch for {path.name}!")
+        print(f"         Expected: {expected}")
+        print(f"         Got:      {sha256}")
         return False
+    print(f"[setup] SHA-256 verified: {path.name}")
+    return True
 
-
-# ── Main tasks ─────────────────────────────────────────────────────────────
 
 def download_base_model(model_dir: Path, force: bool = False) -> None:
     """Download CosyVoice3 weights from Hugging Face Hub."""
@@ -105,11 +67,11 @@ def download_base_model(model_dir: Path, force: bool = False) -> None:
         print(f"[setup] Base model already exists at: {model_dir}")
         return
 
-    print(f"[setup] Downloading {HF_REPO_ID} → {model_dir}")
+    print(f"[setup] Downloading {HF_BASE_REPO_ID} -> {model_dir}")
     try:
         from huggingface_hub import snapshot_download
         snapshot_download(
-            repo_id=HF_REPO_ID,
+            repo_id=HF_BASE_REPO_ID,
             local_dir=str(model_dir),
             ignore_patterns=["*.msgpack", "flax_model*", "tf_model*"],
         )
@@ -120,10 +82,13 @@ def download_base_model(model_dir: Path, force: bool = False) -> None:
         sys.exit(1)
 
 
-def download_checkpoints(release_url: str, force: bool = False) -> None:
-    """Download LoRA checkpoint .pt files from a GitHub Release."""
-    release_url = release_url.rstrip("/")
-    any_downloaded = False
+def download_checkpoints(force: bool = False) -> None:
+    """Download LoRA checkpoint files from Hugging Face Hub."""
+    try:
+        from huggingface_hub import hf_hub_download
+    except ImportError:
+        print("[setup] ERROR: huggingface_hub not installed. Run: pip install huggingface_hub")
+        sys.exit(1)
 
     for filename, rel_dest in CHECKPOINT_FILES.items():
         dest = BAYAN_DIR / rel_dest
@@ -132,16 +97,25 @@ def download_checkpoints(release_url: str, force: bool = False) -> None:
             print(f"[setup] {filename} already present  ({size_mb:.0f} MB)")
             continue
 
-        url = f"{release_url}/{filename}"
-        ok = _download_file(url, dest)
-        if ok:
-            any_downloaded = True
-        else:
-            print(f"         Manual download: {url}")
-            print(f"         Save to:         {dest}")
-
-    if not any_downloaded:
-        print("[setup] All checkpoints already present.")
+        print(f"[setup] Downloading {filename} from {HF_CKPT_REPO_ID} ...")
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        try:
+            hf_hub_download(
+                repo_id=HF_CKPT_REPO_ID,
+                filename=filename,
+                local_dir=str(dest.parent),
+            )
+            size_mb = dest.stat().st_size / 1_048_576
+            print(f"[setup] Downloaded {filename}  ({size_mb:.0f} MB)")
+            expected_sha = CHECKPOINT_SHA256.get(filename)
+            if expected_sha:
+                if not _verify_sha256(dest, expected_sha):
+                    dest.unlink()
+        except Exception as e:
+            print(f"[setup] Download failed: {e}")
+            print(f"         Manual download:")
+            print(f"         https://huggingface.co/{HF_CKPT_REPO_ID}/resolve/main/{filename}")
+            print(f"         Save to: {dest}")
 
 
 def check_checkpoints() -> bool:
@@ -156,7 +130,7 @@ def check_checkpoints() -> bool:
 
 
 def ensure_default_voice() -> None:
-    """Copy asset/zero_shot_prompt.wav → voices/default.wav if missing."""
+    """Copy asset/zero_shot_prompt.wav -> voices/default.wav if missing."""
     if DEFAULT_VOICE.exists():
         print(f"[setup] Default voice: {DEFAULT_VOICE.name}")
         return
@@ -178,32 +152,28 @@ def update_models_yaml(model_dir: Path) -> None:
     updated = re.sub(r'(model_dir:\s*)(".+?")', f'model_dir: "{rel}"', text)
     if updated != text:
         yaml_path.write_text(updated, encoding="utf-8")
-        print(f"[setup] Updated conf/models.yaml model_dir → {rel}")
+        print(f"[setup] Updated conf/models.yaml model_dir -> {rel}")
 
-
-# ── Entry point ────────────────────────────────────────────────────────────
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="BayanSynthTTS — one-time setup (base model + LoRA checkpoints)"
+        description="BayanSynthTTS -- one-time setup (base model + LoRA checkpoints)"
     )
     parser.add_argument("--model-dir", type=Path, default=DEFAULT_MODEL_DIR,
                         help="CosyVoice3 base model directory")
-    parser.add_argument("--release-url", default=GITHUB_RELEASE_URL,
-                        help="GitHub Releases base URL for checkpoint downloads")
     parser.add_argument("--skip-base", action="store_true",
                         help="Skip base model download")
     parser.add_argument("--skip-checkpoints", action="store_true",
-                        help="Skip checkpoint download (only check what's present)")
+                        help="Skip checkpoint download (only check what is present)")
     parser.add_argument("--force", action="store_true",
                         help="Re-download everything even if already present")
     args = parser.parse_args()
 
     print("=" * 62)
-    print("  BayanSynthTTS — Setup")
+    print("  BayanSynthTTS -- Setup")
     print("=" * 62)
 
-    # ── Step 1: Base model ───────────────────────────────────────────
+    # Step 1: Base model
     if not args.skip_base:
         print("\n[1/3] CosyVoice3 base model")
         download_base_model(args.model_dir, force=args.force)
@@ -211,23 +181,18 @@ def main() -> None:
     else:
         print("\n[1/3] Skipping base model download")
 
-    # ── Step 2: LoRA checkpoints ─────────────────────────────────────
+    # Step 2: LoRA checkpoints
     print("\n[2/3] LoRA checkpoints")
     if args.skip_checkpoints:
         check_checkpoints()
     else:
-        if args.release_url == GITHUB_RELEASE_URL and "Ramendan" in GITHUB_RELEASE_URL:
-            # Default URL — try download but don't hard-fail if release not published yet
-            print(f"      Release URL: {args.release_url}")
-            download_checkpoints(args.release_url, force=args.force)
-        else:
-            download_checkpoints(args.release_url, force=args.force)
+        download_checkpoints(force=args.force)
 
-    # ── Step 3: Default voice ────────────────────────────────────────
+    # Step 3: Default voice
     print("\n[3/3] Default voice")
     ensure_default_voice()
 
-    # ── Summary ──────────────────────────────────────────────────────
+    # Summary
     print()
     llm_ok = DEFAULT_LLM_CKPT.exists()
     print("=" * 62)
@@ -244,11 +209,10 @@ def main() -> None:
         print()
         print("  The model will still run using the CosyVoice3 base (lower quality).")
         print()
-        print("  To add checkpoints manually:")
-        print(f"    Copy epoch_28_whole.pt → {DEFAULT_LLM_CKPT}")
-        print()
-        print("  Or download from GitHub Releases:")
-        print("    python scripts/setup_models.py --release-url YOUR_RELEASE_URL")
+        print("  To add the checkpoint manually:")
+        url = f"https://huggingface.co/{HF_CKPT_REPO_ID}/resolve/main/epoch_28_whole.pt"
+        print(f"    Download: {url}")
+        print(f"    Save to:  {DEFAULT_LLM_CKPT}")
     print("=" * 62)
 
 
