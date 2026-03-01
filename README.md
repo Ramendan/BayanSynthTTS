@@ -2,7 +2,7 @@
 
 **Arabic Text-to-Speech powered by CosyVoice3 with LoRA fine-tuning.**
 
-> Just text in, speech out.  No training code, no data processing — inference only.
+> Just text in, speech out. No training code or data processing required. Inference only.
 
 ## Features
 
@@ -10,7 +10,7 @@
 |---------|---------|
 | Arabic TTS | Natural-sounding Modern Standard Arabic |
 | Auto-Tashkeel | Automatic diacritization via mishkal (always on by default) |
-| Voice Cloning | Clone any voice from a 5–15 s clip (WAV/MP3/OGG/M4A/FLAC) |
+| Voice Cloning | Clone any voice from a 5-15 s clip (WAV/MP3/OGG/M4A/FLAC) |
 | Example voices | Two reference voices (`default.wav` and `muffled-talking.wav`) are included; add your own to `voices/` |
 | Speed control | Slow down or speed up synthesis (0.5–2.0×) |
 | Streaming | Chunk-by-chunk audio generation |
@@ -30,25 +30,25 @@
 
 ## Audio Demos
 
-All clips below were generated with this library — no post-processing applied.
+All clips below were generated with this library. No post-processing applied.
 
 > GitHub does not support embedded audio players in Markdown files.  
-> Click any link below — GitHub opens the file page with a built-in player where you can press play directly.
+> Click any link below to open the file page with a built-in player.
 
-| # | Description | Dur | Listen |
+| # | Description | Duration | Listen |
 |---|-------------|-----|--------|
-| 1 | Basic — “aهلا انا بيانسينث” auto-tashkeel | ~3 s | ▶ [01_basic.wav](samples/01_basic.wav) |
-| 2 | Pre-diacritized text, mishkal off | ~7 s | ▶ [02_prediacritized.wav](samples/02_prediacritized.wav) |
-| 3 | Voice clone — muffled voice (ref below) | ~10 s | ▶ [03_voice_cloning.wav](samples/03_voice_cloning.wav) |
+| 1 | Basic synthesis, auto-tashkeel | ~6 s | [01_basic.wav](samples/01_basic.wav) |
+| 2 | Pre-diacritized text, mishkal off | ~7 s | [02_prediacritized.wav](samples/02_prediacritized.wav) |
+| 3 | Voice cloning from muffled reference | ~10 s | [03_voice_cloning.wav](samples/03_voice_cloning.wav) |
 |   ↳ | Reference clip used above | 10 s | 🎤 [ref_voice_muffled.wav](samples/ref_voice_muffled.wav) |
-| 4 | Longer passage — AI topic, 3 sentences | ~15 s | ▶ [04_long_text.wav](samples/04_long_text.wav) |
-| 5 | Slow speed (0.80×) | ~10 s | ▶ [05_slow_speed.wav](samples/05_slow_speed.wav) |
-| 6 | Fast speed (1.20×) | ~5 s | ▶ [06_fast_speed.wav](samples/06_fast_speed.wav) |
-| 7 | 🔊 Phonetics test — حلقيات / tanwin / shaddah | ~7 s | ▶ [07_phonetics.wav](samples/07_phonetics.wav) |
-| 8 | 🌊 Flow & rhythm — connected speech | ~10 s | ▶ [08_flow.wav](samples/08_flow.wav) |
-| 9 | 🧩 Challenge — عَلِم / عَالِم / عَلَم disambiguation | ~5 s | ▶ [09_challenge.wav](samples/09_challenge.wav) |
-| 10 | Phonetics — alternate seed (seed=99) | ~4 s | ▶ [10_phonetics_s2.wav](samples/10_phonetics_s2.wav) |
-| 11 | Flow — alternate seed (seed=99) | ~9 s | ▶ [11_flow_s2.wav](samples/11_flow_s2.wav) |
+| 4 | Longer passage, AI topic, 3 sentences | ~15 s | [04_long_text.wav](samples/04_long_text.wav) |
+| 5 | Slow speed (0.80x) | ~10 s | [05_slow_speed.wav](samples/05_slow_speed.wav) |
+| 6 | Fast speed (1.20x) | ~5 s | [06_fast_speed.wav](samples/06_fast_speed.wav) |
+| 7 | Phonetics test: halqiyyat, tanwin, shaddah | ~7 s | [07_phonetics.wav](samples/07_phonetics.wav) |
+| 8 | Flow and rhythm, connected speech | ~10 s | [08_flow.wav](samples/08_flow.wav) |
+| 9 | Challenge: identical root, different diacritics | ~5 s | [09_challenge.wav](samples/09_challenge.wav) |
+| 10 | Phonetics, alternate seed (seed=99) | ~4 s | [10_phonetics_s2.wav](samples/10_phonetics_s2.wav) |
+| 11 | Flow, alternate seed (seed=99) | ~9 s | [11_flow_s2.wav](samples/11_flow_s2.wav) |
 
 ---
 
@@ -66,9 +66,9 @@ pip install -r requirements.txt
 pip install -e .               # installs bayansynthtts + bundled packages into the venv
 ```
 
-> The CosyVoice3 inference engine and Matcha-TTS decoder are **bundled directly in this repo** — no external private repos required.
+> The CosyVoice3 inference engine and Matcha-TTS decoder are **bundled directly in this repo**. No external private repos required.
 >
-> **Example voices:** two reference clips (`default.wav` and `muffled-talking.wav`) live in `voices/`. Drop additional 5‑15 s recordings there and they automatically appear in the CLI/UI dropdown.
+> **Example voices:** two reference clips (`default.wav` and `muffled-talking.wav`) live in `voices/`. Drop additional 5-15 s recordings there and they automatically appear in the CLI/UI dropdown.
 
 ### 2. Download models
 
@@ -102,16 +102,16 @@ from bayansynthtts import BayanSynthTTS
 
 tts = BayanSynthTTS()
 
-# Plain Arabic — mishkal automatically adds full diacritics before synthesis
-audio = tts.synthesize("اهلا انا بيانسينث")
+# Plain Arabic - mishkal automatically adds full diacritics before synthesis
+audio = tts.synthesize("مرحباً أنا بيان سينث، نظام لتوليد الكلام العربي")
 tts.save_wav(audio, "output.wav")
 ```
 
-> **auto_tashkeel=True** (default) runs the text through **mishkal** before inference —  
-> plain unvocalized Arabic produces natural, correctly-stressed speech.  
+> **auto_tashkeel=True** (default) runs the text through **mishkal** before inference.  
+> Plain unvocalized Arabic produces natural, correctly-stressed speech.  
 > Pass `auto_tashkeel=False` only when your text is already fully diacritized.
 
-▶ **[Listen — 01_basic.wav](samples/01_basic.wav)**
+**[Listen: 01_basic.wav](samples/01_basic.wav)**
 
 ---
 
@@ -127,14 +127,14 @@ audio = tts.synthesize(
 tts.save_wav(audio, "output.wav")
 ```
 
-▶ **[Listen — 02_prediacritized.wav](samples/02_prediacritized.wav)**
+**[Listen: 02_prediacritized.wav](samples/02_prediacritized.wav)**
 
 ---
 
 ### Voice cloning
 
 ```python
-# Use the bundled muffled-talking voice (trim it to 5–15 s first for best results)
+# Use the bundled muffled-talking voice (trim it to 5-15 s first for best results)
 import soundfile as sf
 import numpy as np
 
@@ -150,15 +150,15 @@ audio = tts.synthesize(
 )
 tts.save_wav(audio, "output.wav")
 
-# Or clone any clip in any format (mp3/m4a/ogg/flac — auto-converted internally)
+# Or clone any clip in any format (mp3/m4a/ogg/flac, auto-converted internally)
 audio = tts.synthesize("مَرْحَباً", ref_audio="my_voice.mp3")
 ```
 
-> **Tip:** Keep reference clips to **5–15 seconds** — single speaker, quiet room, no music.  
+> **Tip:** Keep reference clips to **5-15 seconds**: single speaker, quiet room, no music.  
 > Longer clips (>15 s) cause `instruct2` to fail silently and fall back to a lower-quality mode.
 
-🎤 **Reference clip used above:** [ref_voice_muffled.wav](samples/ref_voice_muffled.wav) *(muffled-talking.wav trimmed to 10 s)*  
-▶ **[Listen — 03_voice_cloning.wav](samples/03_voice_cloning.wav)**
+**Reference clip used above:** [ref_voice_muffled.wav](samples/ref_voice_muffled.wav) *(muffled-talking.wav trimmed to 10 s)*  
+**[Listen: 03_voice_cloning.wav](samples/03_voice_cloning.wav)**
 
 ---
 
@@ -174,11 +174,11 @@ audio = tts.synthesize(
 tts.save_wav(audio, "output.wav")
 ```
 
-▶ **[Listen — 04_long_text.wav](samples/04_long_text.wav)**
+**[Listen: 04_long_text.wav](samples/04_long_text.wav)**
 
 ---
 
-### Phonetics test — حلقيات, tanwin, shaddah
+### Phonetics test: halqiyyat, tanwin, shaddah
 
 Designed to exercise pharyngeal/velar consonants, gemination, and nunation at once:
 
@@ -191,12 +191,12 @@ audio = tts.synthesize(
 tts.save_wav(audio, "output.wav")
 ```
 
-▶ **[Listen — 07_phonetics.wav](samples/07_phonetics.wav)** *(seed=42)*  
-▶ **[Listen — 10_phonetics_s2.wav](samples/10_phonetics_s2.wav)** *(seed=99 — different prosody variation)*
+**[Listen: 07_phonetics.wav](samples/07_phonetics.wav)** *(seed=42)*  
+**[Listen: 10_phonetics_s2.wav](samples/10_phonetics_s2.wav)** *(seed=99, different prosody variation)*
 
 ---
 
-### Flow & Rhythm test — connected speech
+### Flow and Rhythm test: connected speech
 
 Tests natural sandhi, liaison, and intonation across a multi-clause sentence:
 
@@ -209,12 +209,12 @@ audio = tts.synthesize(
 tts.save_wav(audio, "output.wav")
 ```
 
-▶ **[Listen — 08_flow.wav](samples/08_flow.wav)** *(seed=42)*  
-▶ **[Listen — 11_flow_s2.wav](samples/11_flow_s2.wav)** *(seed=99 — different prosody variation)*
+**[Listen: 08_flow.wav](samples/08_flow.wav)** *(seed=42)*  
+**[Listen: 11_flow_s2.wav](samples/11_flow_s2.wav)** *(seed=99, different prosody variation)*
 
 ---
 
-### Challenge test — tashkeel disambiguation
+### Challenge test: tashkeel disambiguation
 
 All five ع-rooted words differ **only** by their diacritics; correct rendering proves the model reads harakat accurately:
 
@@ -228,7 +228,7 @@ audio = tts.synthesize(
 tts.save_wav(audio, "output.wav")
 ```
 
-▶ **[Listen — 09_challenge.wav](samples/09_challenge.wav)**
+**[Listen: 09_challenge.wav](samples/09_challenge.wav)**
 
 ---
 
@@ -250,8 +250,8 @@ audio = tts.synthesize(
 tts.save_wav(audio, "fast.wav")
 ```
 
-▶ **[Listen slow — 05_slow_speed.wav](samples/05_slow_speed.wav)**  
-▶ **[Listen fast — 06_fast_speed.wav](samples/06_fast_speed.wav)**
+**[Listen slow: 05_slow_speed.wav](samples/05_slow_speed.wav)**  
+**[Listen fast: 06_fast_speed.wav](samples/06_fast_speed.wav)**
 
 ---
 
@@ -285,7 +285,7 @@ audio = tts.synthesize("مَرْحَباً", ref_audio=tts.get_voice_path("muffl
 
 ## Swapping the LoRA Checkpoint
 
-### Via `conf/models.yaml` (recommended — no code changes)
+### Via `conf/models.yaml` (recommended, no code changes)
 
 ```yaml
 llm_lora:
@@ -309,9 +309,9 @@ bayansynthtts "مَرْحَباً" --llm checkpoints/llm/epoch_40.pt
 
 ## Adding Your Own Voices
 
-Drop any 5–15 second Arabic clip into `voices/`. Supported formats: WAV, MP3, FLAC, OGG, M4A — non‑WAV files are auto-converted at runtime.
+Drop any 5-15 second Arabic clip into `voices/`. Supported formats: WAV, MP3, FLAC, OGG, M4A. Non-WAV files are auto-converted at runtime.
 
-New files are picked up automatically — no configuration changes needed.
+New files are picked up automatically. No configuration changes needed.
 
 ```python
 from bayansynthtts import BayanSynthTTS
@@ -344,7 +344,7 @@ defaults:
 audio = tts.synthesize("مَرْحَباً", ref_audio="path/to/my_voice.mp3")
 ```
 
-**Voice quality guidelines:** 5–15 seconds, quiet room, clear Arabic speech, no music.
+**Voice quality guidelines:** 5-15 seconds, quiet room, clear Arabic speech, no music.
 
 ---
 
@@ -385,7 +385,7 @@ BayanSynthTTS/
 │   ├── muffled-talking.wav # Additional bundled voice
 │   └── README.md
 ├── samples/                # Pre-generated audio demos (tracked in git)
-│   ├── 01_basic.wav                #  "اهلا انا بيانسينث" → auto-tashkeel
+│   ├── 01_basic.wav                #  "مرحباً أنا بيان سينث" - auto-tashkeel
 │   ├── 02_prediacritized.wav       # fully-vowelled classical Arabic
 │   ├── 03_voice_cloning.wav        # voice-cloned from muffled-talking.wav
 │   ├── 04_long_text.wav            # ~15 s multi-sentence AI topic
@@ -425,10 +425,10 @@ BayanSynthTTS/
 
 | Argument | Type | Default | Description |
 |----------|------|---------|-------------|
-| `text` | `str` | — | Arabic text (plain or diacritized) |
+| `text` | `str` | required | Arabic text (plain or diacritized) |
 | `ref_audio` | `str` | default voice | Voice clone source (any format) |
 | `instruct` | `str` | from config | Instruct prompt override |
-| `speed` | `float` | `1.0` | Speed multiplier (0.5–2.0) |
+| `speed` | `float` | `1.0` | Speed multiplier (0.5-2.0) |
 | `stream` | `bool` | `False` | Yield chunks vs return full array |
 | `seed` | `int` | `None` | Random seed for reproducibility |
 | `auto_tashkeel` | `bool` | `True` | Auto-diacritize input text |
@@ -457,7 +457,7 @@ list_available_backends()              # → ['mishkal']  (or ['tashkeel', 'mish
 | No audio generated | Check console for the specific mode that failed; verify `voices/default.wav` exists |
 | MP3/M4A upload fails | Install ffmpeg: `winget install ffmpeg` (Windows) or `sudo apt install ffmpeg` (Linux) |
 | `ONNX CUDAExecutionProvider not available` | Expected on CPU-only machines or when `onnxruntime-gpu` is not installed. Inference still works on CPU. |
-| First-run downloads from modelscope.cn | Expected — the `wetext` text normalizer downloads its model (~30 MB) once to `~/.cache/modelscope`. It's cached after the first run. |
+| First-run downloads from modelscope.cn | Expected. The `wetext` text normalizer downloads its model (~30 MB) once to `~/.cache/modelscope`. It is cached after the first run. |
 | `scripts\run_ui.bat` says "venv not found" | Make sure you created the venv **inside** `BayanSynthTTS/` with `python -m venv .venv` and ran `pip install -r requirements.txt && pip install -e .` from there. |
 | `huggingface_hub` version conflict | Keep `huggingface_hub<1.0` as pinned. If you see errors, run `pip install "huggingface_hub<1.0"` |
 
@@ -465,7 +465,7 @@ list_available_backends()              # → ['mishkal']  (or ['tashkeel', 'mish
 
 ## License
 
-Apache 2.0 — See [LICENSE](../LICENSE)
+Apache 2.0. See [LICENSE](../LICENSE)
 
 The underlying CosyVoice3 model is subject to its own license.  
 LoRA checkpoints trained on Common Voice Arabic data are released under CC‑BY 4.0.
