@@ -158,6 +158,33 @@ bayansynthtts "مَرْحَباً" --llm checkpoints/llm/epoch_40.pt
 
 ---
 
+## Adding Your Own Voices
+
+To supply additional speaking references simply drop any 5–15 second Arabic clip
+into the `voices/` directory. Supported formats are WAV, MP3, FLAC, OGG, and
+M4A; non‑WAV files are auto‑converted at runtime.
+
+New files are picked up automatically—no configuration changes needed. Use the
+Python API to see what's available:
+
+```python
+from bayansynthtts import BayanSynthTTS
+
+tts = BayanSynthTTS()
+print(tts.list_voices())  # e.g. ['default.wav', 'muffled-talking.wav', 'my_voice.wav']
+```
+
+You can then specify the voice by filename either in code or via CLI:
+
+```bash
+bayansynthtts "مرحبا" --voice voices/my_voice.wav
+```
+
+If you'd prefer to change the default permanently, overwrite
+`voices/default.wav` or adjust `conf/models.yaml` (see below).
+
+---
+
 ## Changing the Default Voice
 
 **Option A — Replace the file:**
