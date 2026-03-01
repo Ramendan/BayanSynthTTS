@@ -113,7 +113,7 @@ def download_checkpoints(force: bool = False) -> None:
                     dest.unlink()
         except Exception as e:
             print(f"[setup] Download failed: {e}")
-            print(f"         Manual download:")
+            print("         Manual download:")
             print(f"         https://huggingface.co/{HF_CKPT_REPO_ID}/resolve/main/{filename}")
             print(f"         Save to: {dest}")
 
