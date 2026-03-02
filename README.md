@@ -37,16 +37,17 @@ All samples were generated with this library. No post-processing applied.
 | # | Description | Duration |
 |---|-------------|----------|
 | 1 | Basic synthesis, auto-tashkeel | ~6 s |
-| 2 | Pre-diacritized text, mishkal off | ~7 s |
+| 2 | Pre-diacritized text, mishkal off | ~4 s |
 | 3 | Voice cloning from muffled reference | ~10 s |
-| 4 | Longer passage, AI topic, 3 sentences | ~15 s |
+| 4 | Longer passage, AI topic, 3 sentences | ~17 s |
 | 5 | Slow speed (0.80x) | ~10 s |
 | 6 | Fast speed (1.20x) | ~5 s |
 | 7 | Phonetics test: halqiyyat, tanwin, shaddah | ~7 s |
-| 8 | Flow and rhythm, connected speech | ~10 s |
+| 8 | Flow and rhythm, connected speech | ~9 s |
 | 9 | Challenge: identical root, different diacritics | ~5 s |
-| 10 | Phonetics, alternate seed (seed=99) | ~4 s |
-| 11 | Flow, alternate seed (seed=99) | ~9 s |
+| 10 | Phonetics, alternate seed (seed=17) | ~9 s |
+| 11 | Flow, alternate seed (seed=99) | ~10 s |
+| 12 | Instruct prompt: warm newsreader style | ~8 s |
 ---
 
 ## Quick Start
@@ -100,7 +101,8 @@ from bayansynthtts import BayanSynthTTS
 tts = BayanSynthTTS()
 
 # Plain Arabic - mishkal automatically adds full diacritics before synthesis
-audio = tts.synthesize("مرحباً أنا بيان سينث، نظام لتوليد الكلام العربي")
+# "Hello, I am BayanSynth, an Arabic speech synthesis system"
+audio = tts.synthesize("مرحباً أنا بيانسينث، نظام لتوليد الكلام العربي")
 tts.save_wav(audio, "output.wav")
 ```
 
@@ -116,9 +118,9 @@ tts.save_wav(audio, "output.wav")
 
 ```python
 # When text is already fully vowelled, disable mishkal to preserve exact pronunciation
+# "The Arabic language is a treasure of culture and heritage."
 audio = tts.synthesize(
-    "إِنَّ اللُّغَةَ الْعَرَبِيَّةَ كَنْزٌ مِنَ الثَّقَافَةِ وَالتُّرَاثِ، "
-    "وَهِيَ لُغَةُ الْقُرْآنِ الْكَرِيمِ وَالشِّعْرِ الْعَرَبِيِّ الْعَرِيقِ.",
+    "إِنَّ اللُّغَةَ الْعَرَبِيَّةَ كَنْزٌ مِنَ الثَّقَافَةِ وَالتُّرَاثِ.",
     auto_tashkeel=False,
 )
 tts.save_wav(audio, "output.wav")
@@ -139,6 +141,8 @@ import numpy as np
 data, sr = sf.read("voices/muffled-talking.wav", dtype="float32")
 sf.write("voices/muffled_trim.wav", data[:sr * 10], sr, subtype="PCM_16")
 
+# "This voice is cloned from a short audio clip.
+#  You can use any clip between five and fifteen seconds."
 audio = tts.synthesize(
     "هَذَا الصَّوْتُ مُسْتَنْسَخٌ مِنْ مَقْطَعٍ صَوْتِيٍّ قَصِيرٍ. "
     "يُمْكِنُكَ اسْتِخْدَامُ أَيِّ مَقْطَعٍ بِمُدَّةِ خَمْسٍ إِلَى خَمْسَ عَشَرَةَ ثَانِيَةً.",
@@ -162,11 +166,16 @@ audio = tts.synthesize("مَرْحَباً", ref_audio="my_voice.mp3")
 ### Longer text
 
 ```python
+# "Artificial intelligence is one of the most prominent technological advances of our era.
+#  It relies on analyzing massive amounts of data to extract complex patterns.
+#  Among its most notable applications: speech recognition, language translation,
+#  and text generation."
 audio = tts.synthesize(
     "الذكاء الاصطناعي هو أحد أبرز التطورات التكنولوجية في عصرنا الحديث. "
     "يعتمد على تحليل كميات ضخمة من البيانات لاستخلاص أنماط معقدة. "
     "ومن أبرز تطبيقاته نظم التعرف على الصوت وترجمة اللغات وتوليد النصوص.",
     auto_tashkeel=True,
+    speed=0.88,  # slightly slower for comfortable long-form listening
 )
 tts.save_wav(audio, "output.wav")
 ```
@@ -180,6 +189,8 @@ tts.save_wav(audio, "output.wav")
 Designed to exercise pharyngeal/velar consonants, gemination, and nunation at once:
 
 ```python
+# "The high quality of artificial intelligence technologies contributes to building
+#  a brilliant future for generations to come."
 audio = tts.synthesize(
     "الْجَوْدَةُ الْعَالِيَةُ لِتَقْنِيَّاتِ الذَّكَاءِ الاصْطِنَاعِيِّ "
     "تُسَاهِمُ فِي بِنَاءِ مُسْتَقْبَلٍ بَاهِرٍ لِلْأَجْيَالِ.",
@@ -189,7 +200,7 @@ tts.save_wav(audio, "output.wav")
 ```
 
 **[Listen: 07_phonetics.wav](samples/07_phonetics.wav)** *(seed=42)*  
-**[Listen: 10_phonetics_s2.wav](samples/10_phonetics_s2.wav)** *(seed=99, different prosody variation)*
+**[Listen: 10_phonetics_s2.wav](samples/10_phonetics_s2.wav)** *(seed=17, different prosody variation)*
 
 ---
 
@@ -198,8 +209,10 @@ tts.save_wav(audio, "output.wav")
 Tests natural sandhi, liaison, and intonation across a multi-clause sentence:
 
 ```python
+# "BayanSynth aims to deliver a unique voice experience that combines
+#  precise pronunciation with beauty of delivery."
 audio = tts.synthesize(
-    "إِنَّ نِظَامَ بَيَانِ سِينْث يَهْدِفُ إِلَى تَقْدِيمِ تَجْرِبَةٍ صَوْتِيَّةٍ فَرِيدَةٍ، "
+    "إِنَّ نِظَامَ بَيَانِسِينْث يَهْدِفُ إِلَى تَقْدِيمِ تَجْرِبَةٍ صَوْتِيَّةٍ فَرِيدَةٍ، "
     "تَجْمَعُ بَيْنَ دِقَّةِ النُّطْقِ وَجَمَالِ الْأَدَاءِ.",
     auto_tashkeel=False,
 )
@@ -217,6 +230,8 @@ All five ع-rooted words differ **only** by their diacritics; correct rendering 
 
 ```python
 # عَلِم (he knew) vs عَالِم (scholar) vs عَلَم (flag) vs عِلْم (knowledge)
+# "The scholar knew that the flag rises with knowledge,
+#  so he inquired about the sciences of the ancients."
 audio = tts.synthesize(
     "عَلِمَ الْعَالِمُ أَنَّ الْعَلَمَ يَعْلُو بِالْعِلْمِ، "
     "فَاسْتَعْلَمَ عَنْ عُلُومِ الْأَوَّلِينَ.",
@@ -232,15 +247,17 @@ tts.save_wav(audio, "output.wav")
 ### Speed control
 
 ```python
-TEXT = "مَرْحَباً بِكُمْ فِي بَيَانْ سِينْثِ. هَذَا تَوْلِيدٌ بِسُرْعَةٍ مُخَفَّضَةٍ لِلتَّوْضِيحِ."
+# "Welcome to BayanSynth. This is synthesis at reduced speed for demonstration."
+TEXT = "مَرْحَباً بِكُمْ فِي بَيَانْسِينْثِ. هَذَا تَوْلِيدٌ بِسُرْعَةٍ مُخَفَّضَةٍ لِلتَّوْضِيحِ."
 
 # Slower speech (0.80×)
 audio = tts.synthesize(TEXT, speed=0.80, auto_tashkeel=False)
 tts.save_wav(audio, "slow.wav")
 
+# "Welcome to BayanSynth. This is synthesis at elevated speed for demonstration."
 # Faster speech (1.20×)
 audio = tts.synthesize(
-    "مَرْحَباً بِكُمْ فِي بَيَانْ سِينْثِ. هَذَا تَوْلِيدٌ بِسُرْعَةٍ مُرْتَفَعَةٍ لِلتَّوْضِيحِ.",
+    "مَرْحَباً بِكُمْ فِي بَيَانْسِينْثِ. هَذَا تَوْلِيدٌ بِسُرْعَةٍ مُرْتَفَعَةٍ لِلتَّوْضِيحِ.",
     speed=1.20,
     auto_tashkeel=False,
 )
@@ -249,6 +266,30 @@ tts.save_wav(audio, "fast.wav")
 
 **[Listen slow: 05_slow_speed.wav](samples/05_slow_speed.wav)**  
 **[Listen fast: 06_fast_speed.wav](samples/06_fast_speed.wav)**
+
+---
+
+### Instruct prompt: style control
+
+Pass a free-text style directive alongside the synthesis text to steer the speaker's tone, register, or delivery:
+
+```python
+# "Welcome. This is an example of using an instruct prompt to control voice style."
+audio = tts.synthesize(
+    "مَرْحَباً بِكُمْ. هَذَا مِثَالٌ عَلَى اسْتِخْدَامِ التَّوْجِيهِ لِضَبْطِ أُسْلُوبِ الصَّوْتِ.",
+    instruct="Speak in a warm, clear newsreader style with careful diction.",
+    auto_tashkeel=False,
+    seed=42,
+)
+tts.save_wav(audio, "output.wav")
+```
+
+> **Tip:** The `instruct` parameter accepts any English style description. Try:
+> - `"Speak slowly and clearly, as if reading to a child."`
+> - `"Read in a calm, authoritative broadcast voice."`
+> - `"Speak with natural conversational rhythm."`
+
+**[Listen: 12_instruct.wav](samples/12_instruct.wav)**
 
 ---
 
@@ -382,17 +423,18 @@ BayanSynthTTS/
 │   ├── muffled-talking.wav # Additional bundled voice
 │   └── README.md
 ├── samples/                # Pre-generated audio demos (tracked in git)
-│   ├── 01_basic.wav                #  "مرحباً أنا بيان سينث" - auto-tashkeel
-│   ├── 02_prediacritized.wav       # fully-vowelled classical Arabic
+│   ├── 01_basic.wav                # "مرحباً أنا بيانسينث" - auto-tashkeel
+│   ├── 02_prediacritized.wav       # fully-vowelled classical Arabic, mishkal off
 │   ├── 03_voice_cloning.wav        # voice-cloned from muffled-talking.wav
-│   ├── 04_long_text.wav            # ~15 s multi-sentence AI topic
+│   ├── 04_long_text.wav            # ~17 s multi-sentence AI topic (speed=0.88)
 │   ├── 05_slow_speed.wav           # speed=0.80
 │   ├── 06_fast_speed.wav           # speed=1.20
 │   ├── 07_phonetics.wav            # حلقيات / tanwin / shaddah test (seed=42)
 │   ├── 08_flow.wav                 # flow & rhythm test (seed=42)
 │   ├── 09_challenge.wav            # عَلِم/عَالِم/عَلَم tashkeel disambiguation
-│   ├── 10_phonetics_s2.wav         # same as 07, seed=99 (prosody variation)
+│   ├── 10_phonetics_s2.wav         # same as 07, seed=17 (prosody variation)
 │   ├── 11_flow_s2.wav              # same as 08, seed=99 (prosody variation)
+│   ├── 12_instruct.wav             # instruct prompt: warm newsreader style
 │   └── ref_voice_muffled.wav       # reference voice clip used for 03 (10 s)
 ├── scripts/
 │   ├── setup_models.py     # One-time setup (download base model, check deps)
