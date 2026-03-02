@@ -2,7 +2,7 @@
 
 **Arabic Text-to-Speech powered by CosyVoice3 with LoRA fine-tuning.**
 
-> Just text in, speech out. No training code or data processing required. Inference only.
+> Text in. Speech out. Inference only without training or preprocessing.
 
 ## Features
 
@@ -13,6 +13,7 @@
 | Voice Cloning | Clone any voice from a 5-15 s clip (WAV/MP3/OGG/M4A/FLAC) |
 | Example voices | Two reference voices (`default.wav` and `muffled-talking.wav`) are included; add your own to `voices/` |
 | Speed control | Slow down or speed up synthesis (0.5–2.0×) |
+| LoRA Swapping | Change checkpoints via `conf/models.yaml` no code edits |
 | Streaming | Chunk-by-chunk audio generation |
 | Gradio UI | Simple web interface included |
 | CLI | One-liner inference from terminal |
