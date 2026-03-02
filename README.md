@@ -30,26 +30,23 @@
 
 ## Audio Demos
 
-All clips below were generated with this library. No post-processing applied.
+All samples were generated with this library. No post-processing applied.
 
-> GitHub does not support embedded audio players in Markdown files.  
-> Click any link below to open the file page with a built-in player.
+**Listen inline (with built-in audio players): [huggingface.co/Ramendan/BayanSynthTTS-checkpoints](https://huggingface.co/Ramendan/BayanSynthTTS-checkpoints)**
 
-| # | Description | Duration | Listen |
-|---|-------------|-----|--------|
-| 1 | Basic synthesis, auto-tashkeel | ~6 s | [01_basic.wav](samples/01_basic.wav) |
-| 2 | Pre-diacritized text, mishkal off | ~7 s | [02_prediacritized.wav](samples/02_prediacritized.wav) |
-| 3 | Voice cloning from muffled reference | ~10 s | [03_voice_cloning.wav](samples/03_voice_cloning.wav) |
-|   ↳ | Reference clip used above | 10 s | 🎤 [ref_voice_muffled.wav](samples/ref_voice_muffled.wav) |
-| 4 | Longer passage, AI topic, 3 sentences | ~15 s | [04_long_text.wav](samples/04_long_text.wav) |
-| 5 | Slow speed (0.80x) | ~10 s | [05_slow_speed.wav](samples/05_slow_speed.wav) |
-| 6 | Fast speed (1.20x) | ~5 s | [06_fast_speed.wav](samples/06_fast_speed.wav) |
-| 7 | Phonetics test: halqiyyat, tanwin, shaddah | ~7 s | [07_phonetics.wav](samples/07_phonetics.wav) |
-| 8 | Flow and rhythm, connected speech | ~10 s | [08_flow.wav](samples/08_flow.wav) |
-| 9 | Challenge: identical root, different diacritics | ~5 s | [09_challenge.wav](samples/09_challenge.wav) |
-| 10 | Phonetics, alternate seed (seed=99) | ~4 s | [10_phonetics_s2.wav](samples/10_phonetics_s2.wav) |
-| 11 | Flow, alternate seed (seed=99) | ~9 s | [11_flow_s2.wav](samples/11_flow_s2.wav) |
-
+| # | Description | Duration |
+|---|-------------|----------|
+| 1 | Basic synthesis, auto-tashkeel | ~6 s |
+| 2 | Pre-diacritized text, mishkal off | ~7 s |
+| 3 | Voice cloning from muffled reference | ~10 s |
+| 4 | Longer passage, AI topic, 3 sentences | ~15 s |
+| 5 | Slow speed (0.80x) | ~10 s |
+| 6 | Fast speed (1.20x) | ~5 s |
+| 7 | Phonetics test: halqiyyat, tanwin, shaddah | ~7 s |
+| 8 | Flow and rhythm, connected speech | ~10 s |
+| 9 | Challenge: identical root, different diacritics | ~5 s |
+| 10 | Phonetics, alternate seed (seed=99) | ~4 s |
+| 11 | Flow, alternate seed (seed=99) | ~9 s |
 ---
 
 ## Quick Start
