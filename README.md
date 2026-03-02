@@ -2,7 +2,7 @@
 
 **Arabic Text-to-Speech powered by CosyVoice3 with LoRA fine-tuning.**
 
-> Just text in, speech out.  No training code, no data processing — inference only.
+> Text in. Speech out. Inference only without training or preprocessing.
 
 ## Features
 
