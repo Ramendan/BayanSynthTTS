@@ -37,7 +37,7 @@ All samples were generated with this library. No post-processing applied.
 
 | # | Description | Duration |
 |---|-------------|----------|
-| 1 | Basic synthesis, auto-tashkeel | ~6 s |
+| 1 | Basic synthesis, pre-diacritized | ~5 s |
 | 2 | Pre-diacritized text, mishkal off | ~4 s |
 | 3 | Voice cloning from muffled reference | ~10 s |
 | 4 | Longer passage, AI topic, 3 sentences | ~17 s |
@@ -94,22 +94,23 @@ python bayansynthtts/app.py   # Cross-platform (run from inside BayanSynthTTS/)
 
 ## Python API
 
-### Basic synthesis (auto-tashkeel on by default)
+### Basic synthesis
 
 ```python
 from bayansynthtts import BayanSynthTTS
 
 tts = BayanSynthTTS()
 
-# Plain Arabic - mishkal automatically adds full diacritics before synthesis
-# "Hello, I am BayanSynth, an Arabic speech synthesis system"
-audio = tts.synthesize("مرحباً أنا بيانسينث، نظام لتوليد الكلام العربي")
+# Pre-diacritized Arabic — "Hello, I am BayanSynth, a system for generating Arabic speech."
+audio = tts.synthesize(
+    "مَرْحَبًا، أَنَا بَيَانْسِينْث، نِظَامٌ لِتَوْلِيدِ الْكَلَامِ الْعَرَبِيِّ.",
+    auto_tashkeel=False,
+)
 tts.save_wav(audio, "output.wav")
 ```
 
-> **auto_tashkeel=True** (default) runs the text through **mishkal** before inference.  
-> Plain unvocalized Arabic produces natural, correctly-stressed speech.  
-> Pass `auto_tashkeel=False` only when your text is already fully diacritized.
+> Pass `auto_tashkeel=False` when your text already has full diacritics.  
+> Use `auto_tashkeel=True` (default) to let **mishkal** diacritize plain text automatically.
 
 **[Listen: 01_basic.wav](samples/01_basic.wav)**
 
@@ -424,7 +425,7 @@ BayanSynthTTS/
 │   ├── muffled-talking.wav # Additional bundled voice
 │   └── README.md
 ├── samples/                # Pre-generated audio demos (tracked in git)
-│   ├── 01_basic.wav                # "مرحباً أنا بيانسينث" - auto-tashkeel
+│   ├── 01_basic.wav                # "مَرْحَبًا أَنَا بَيَانْسِينْث" - pre-diacritized
 │   ├── 02_prediacritized.wav       # fully-vowelled classical Arabic, mishkal off
 │   ├── 03_voice_cloning.wav        # voice-cloned from muffled-talking.wav
 │   ├── 04_long_text.wav            # ~17 s multi-sentence AI topic (speed=0.88)
