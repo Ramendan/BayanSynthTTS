@@ -112,6 +112,14 @@ def load_model_config(config_path: Optional[str] = None) -> dict:
     def _v(section, key, fallback):
         return cfg.get(section, {}).get(key, fallback)
 
+    def _float_or_none(value):
+        if value is None:
+            return None
+        try:
+            return float(value)
+        except (TypeError, ValueError):
+            return None
+
     return {
         "model_dir":       _p("base_model", "model_dir", DEFAULT_MODEL_DIR),
         "llm_checkpoint":  _p("llm_lora",   "checkpoint", DEFAULT_LLM_CKPT),
@@ -123,6 +131,7 @@ def load_model_config(config_path: Optional[str] = None) -> dict:
         "instruct":        _v("defaults",   "instruct",   DEFAULT_INSTRUCT),
         "auto_tashkeel":   _v("defaults",   "auto_tashkeel", True),
         "sample_rate":     _v("defaults",   "sample_rate", SAMPLE_RATE),
+        "output_peak_scale": _float_or_none(_v("defaults", "output_peak_scale", 0.9)),
     }
 
 
@@ -402,12 +411,21 @@ class BayanSynthTTS:
             self._ref_audio_path = DEFAULT_PROMPT_WAV
         elif os.path.isfile(_ASSET_PROMPT_WAV):
             self._ref_audio_path = _ASSET_PROMPT_WAV
+            print(
+                "[BayanSynthTTS] WARNING: Using asset fallback reference voice "
+                f"'{_ASSET_PROMPT_WAV}' because no default voice file was found."
+            )
         else:
             self._ref_audio_path = None
+            print(
+                "[BayanSynthTTS] WARNING: No reference voice found "
+                "(default.wav and asset fallback missing)."
+            )
 
         _raw_instruct = instruct or cfg["instruct"]
         self._instruct = _raw_instruct if "<|endofprompt|>" in _raw_instruct else _raw_instruct + "<|endofprompt|>"
         self._default_auto_tashkeel: bool = cfg["auto_tashkeel"]
+        self._output_peak_scale: Optional[float] = cfg.get("output_peak_scale", 0.9)
 
         # ── Load base model ──────────────────────────────────────────────────
         print(f"[BayanSynthTTS] Loading CosyVoice3 from {_model_dir}")
@@ -477,8 +495,10 @@ class BayanSynthTTS:
 
         audio = np.concatenate(chunks, axis=-1)
         peak = np.abs(audio).max()
-        if peak > 0:
-            audio = audio / peak * 0.9
+        if peak > 0 and self._output_peak_scale is not None:
+            target_peak = max(0.0, min(float(self._output_peak_scale), 1.0))
+            if target_peak > 0:
+                audio = audio / peak * target_peak
         return audio
 
     def synthesize_to_file(
@@ -577,7 +597,7 @@ class BayanSynthTTS:
             if prompt_path and os.path.isfile(prompt_path):
                 try:
                     for chunk in self.cosyvoice.inference_cross_lingual(
-                        text, prompt_path, stream=stream, text_frontend=False
+                        text, prompt_path, stream=stream, speed=speed, text_frontend=False
                     ):
                         yield chunk["tts_speech"].cpu().numpy().flatten()
                     return
@@ -587,10 +607,13 @@ class BayanSynthTTS:
             # ── Final fallback: asset prompt wav ──────────────────────────
             fallback = _ASSET_PROMPT_WAV if os.path.isfile(_ASSET_PROMPT_WAV) else None
             if fallback:
-                print(f"[BayanSynthTTS] Using asset fallback wav: {fallback}")
+                print(
+                    "[BayanSynthTTS] WARNING: Falling back to asset prompt wav "
+                    f"'{fallback}' after primary modes failed."
+                )
                 try:
                     for chunk in self.cosyvoice.inference_cross_lingual(
-                        text, fallback, stream=stream, text_frontend=False
+                        text, fallback, stream=stream, speed=speed, text_frontend=False
                     ):
                         yield chunk["tts_speech"].cpu().numpy().flatten()
                     return
