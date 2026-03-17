@@ -45,3 +45,7 @@ defaults:
 
   # Audio sample rate — must match CosyVoice3. Do NOT change.
   sample_rate: 24000
+
+  # Final output peak scaling after synthesis.
+  # Set null to disable post-synthesis peak normalization.
+  output_peak_scale: 0.9

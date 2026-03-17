@@ -295,6 +295,25 @@ tts.save_wav(audio, "output.wav")
 
 ---
 
+### A/B normalization evaluation (legacy vs safe)
+
+Use the built-in script to generate paired clone outputs and a metrics report
+with spectral centroid and HF energy deltas.
+
+```bash
+python scripts/ab_normalization_eval.py \
+    --text "مَرْحَباً بِكُمْ" \
+    --ref-audio voices/default.wav \
+    --seed 42 --speed 1.0
+```
+
+Outputs are saved under `samples/ab_norm_eval/`:
+- `legacy_match_default.wav`
+- `safe_peak_only.wav`
+- `report.json`
+
+---
+
 ### Streaming output
 
 ```python
@@ -344,6 +363,20 @@ tts = BayanSynthTTS(llm_checkpoint="checkpoints/llm/epoch_40.pt")
 ```bash
 bayansynthtts "مَرْحَباً" --llm checkpoints/llm/epoch_40.pt
 ```
+
+---
+
+## Output Peak Scaling
+
+Post-synthesis peak scaling is configurable in `conf/models.yaml`:
+
+```yaml
+defaults:
+    output_peak_scale: 0.9
+```
+
+- Set to `0.9` (default) for clipping safety.
+- Set to `null` to disable post-synthesis peak normalization.
 
 ---
 
@@ -440,6 +473,7 @@ BayanSynthTTS/
 │   └── ref_voice_muffled.wav       # reference voice clip used for 03 (10 s)
 ├── scripts/
 │   ├── setup_models.py     # One-time setup (download base model, check deps)
+│   ├── ab_normalization_eval.py  # A/B clone eval: legacy vs safe normalization
 │   ├── setup_models.bat    # Windows wrapper
 │   ├── run_ui.bat          # Launch Gradio UI (Windows)
 │   └── infer.bat           # CLI inference (Windows)

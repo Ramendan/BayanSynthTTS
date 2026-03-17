@@ -1,0 +1,24 @@
+{
+  "text": "مَرْحَباً بِكُمْ فِي بَيَانْسِينْث",
+  "ref_audio": "C:\\Users\\Hassan\\Desktop\\CosyVoice\\BayanSynthTTS\\samples\\ab_norm_eval\\Hassan_loud.wav",
+  "seed": 42,
+  "speed": 1.0,
+  "metrics": {
+    "legacy_match_default": {
+      "spectral_centroid_hz": 1970.783083433217,
+      "hf_energy_pct": 4.272580623626709
+    },
+    "safe_peak_only": {
+      "spectral_centroid_hz": 1814.633471316978,
+      "hf_energy_pct": 1.954921007156372
+    }
+  },
+  "delta": {
+    "spectral_centroid_hz": -156.1496121162388,
+    "hf_energy_pct": -2.317659616470337
+  },
+  "outputs": {
+    "legacy_match_default": "C:\\Users\\Hassan\\Desktop\\CosyVoice\\BayanSynthTTS\\samples\\ab_norm_eval\\legacy_match_default.wav",
+    "safe_peak_only": "C:\\Users\\Hassan\\Desktop\\CosyVoice\\BayanSynthTTS\\samples\\ab_norm_eval\\safe_peak_only.wav"
+  }
+}
